@@ -1,0 +1,1187 @@
+<style>
+    body{
+        margin: 0;
+        padding:0;
+    }
+    #content{
+        width: 75vw;
+        height: 100vh;
+        background: darkgray;
+        overflow: scroll;
+        scrollbar-width: none; 
+    }
+    #content::-webkit-scrollbar {
+        display: none;
+    }
+    #canvas{
+        position: relative;
+        top:50%;
+        left:50%;
+
+        background: repeating-conic-gradient(#808080 0% 25%, white 0% 50%) 
+              50% / 10px 10px;
+        transform: translate(-50%, -50%);
+    }
+
+    #editor{
+        position: absolute;
+        right: 0;
+        top:0;
+        width: 21vw;
+        height:calc(100vh - 4vw);
+        padding:2vw;
+    }
+
+    #objects{
+        border: 1px solid black;
+        background: #e3e3e3;
+        height: 40vh;
+        overflow-y: scroll;
+    }
+
+    #objects p{
+        margin: 0;
+        background: #808080;
+        padding: 1vh;
+        height: 2vh;
+        line-height: 2vh;
+        font-family: sans-serif;
+    }
+    #objects b{
+        float: left;
+    }
+    #objects em{
+        float: right;
+    }
+</style>
+<div id="content">
+    <canvas id="canvas"></canvas>
+</div>
+<div id="editor">
+    <div id="objects">
+        <p><b>Rectangle</b><em>34, 83</em></p>
+    </div>
+
+    <div id="controls">
+        X: <input id="x" type="number"  onchange="objects[editIndex].x = parseInt(this.value)"><br>
+    Y: <input id="y" type="number"  onchange="objects[editIndex].y = parseInt(this.value)"><br>
+    <div id="rect">
+        W: <input id="w"type="number"  onchange="objects[editIndex].w = parseInt(this.value)"><br>
+        H: <input id="h" type="number"  onchange="objects[editIndex].h = parseInt(this.value)"><br>
+    </div>
+    LW: <input id="lw" type="number" min="0" max="30" onchange="objects[editIndex].linewidth = parseInt(this.value)"><br>
+    GA: <input id="ga" type="number" step="0.1" min="0" max="1" onchange="objects[editIndex].opacity = parseFloat(this.value)"><br>
+    Fill: <input id="fill" type="color" onchange="objects[editIndex].color[1] = this.value">
+    <input type="checkbox" id="fCheck" checked onclick="objects[editIndex].fill = this.checked">
+    <br>
+
+    Stroke: <input id="stroke" type="color" onchange="objects[editIndex].color[0] = this.value">
+    <input type="checkbox" id="sCheck" checked onclick="objects[editIndex].stroke = this.checked">
+    <br>
+    <div id="poly">
+        Close Path: <input id="cp" type="checkbox" checked onclick="objects[editIndex].cp = this.checked">
+    </div>
+    <div id="circ">
+        Radius: <input id="r" type="number" step="1" min="0" max="500" onchange="objects[editIndex].changeRadius(parseFloat(this.value))">
+    <br>
+    Start Angle: <input id="sA" type="number" step="5" min="0" max="360" onchange="objects[editIndex].sA = parseFloat(this.value)*(Math.PI/180)">
+    End Angle: <input id="eA" type="number" step="5" min="0" max="360" onchange="objects[editIndex].eA = parseFloat(this.value)*(Math.PI/180)">
+    </div>
+    <br>
+    
+
+    <br>
+    </div>
+    Canvas Width: <input type="number" placeholder="500" onchange="canvas.width = parseInt(this.value)">
+    <br>
+    Canvas Height: <input type="number" placeholder="500" onchange="canvas.height = parseInt(this.value)">
+    <br>
+    <button onclick="save()">Save In Browser</button>
+    <button onclick="exportSVG()">Export SVG</button>
+    <button onclick="exportEdit()">Export Editable File</button>
+    <button onclick="importEdit()">Import Editable File</button>
+    
+</div>
+<script>
+    var container = document.getElementById("objects");
+
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext('2d');
+
+    var canvasWidth = 500
+    var canvasHeight = 500
+
+    canvas.width = canvasWidth
+    canvas.height = canvasHeight
+
+    var objects = []
+    var editIndex = null
+
+    var cursor
+
+
+    function update(){
+        ctx.clearRect(0,0,canvas.width,canvas.height)
+
+        for(let i = objects.length-1; i >= 0; i--){
+            objects[i].update()
+        }
+
+        for(let i =0; i<objects.length; i++){
+            objects[i].draw()
+        }
+
+        if(editIndex != null && objects[editIndex].t == "rect"){
+            ctx.fillStyle = "red"
+            ctx.strokeStyle = "black"
+            var x = objects[editIndex].x
+            var y = objects[editIndex].y
+            var w = objects[editIndex].w
+            var h = objects[editIndex].h
+            var p = [[x,y],[x+w,y],[x+w,y+h],[x,y+h]]
+            for(var i = 0; i<4; i++){
+                ctx.lineWidth = 1
+                ctx.beginPath()
+                ctx.arc(p[i][0],p[i][1],5,0,2*Math.PI)
+                ctx.fill()
+                ctx.stroke()
+                ctx.closePath()
+            }
+        }
+
+        // if(editIndex != null && objects[editIndex].t == "poly"){
+        //     ctx.fillStyle = "white"
+        //     ctx.strokeStyle = "black"
+        //     var x = objects[editIndex].x
+        //     var y = objects[editIndex].y
+        //     var p = objects[editIndex].points
+        //     for(var i = 0; i<p.length; i++){
+        //         x += p[i].x
+        //         y += p[i].y
+        //         ctx.lineWidth = 1
+        //         ctx.beginPath()
+        //         ctx.arc(x,y,5,0,2*Math.PI)
+        //         ctx.fill()
+        //         ctx.stroke()
+        //         ctx.closePath()
+        //     }
+        // }
+
+        if(editIndex != null && objects[editIndex].t == "circ"){
+            ctx.fillStyle = "white"
+            ctx.strokeStyle = "black"
+            var p = objects[editIndex].point
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            ctx.arc(p.x,p.y,5,0,2*Math.PI)
+            ctx.fill()
+            ctx.stroke()
+            ctx.closePath()
+        }
+
+        cursor.draw()
+        cursor.update()
+
+        requestAnimationFrame(update)
+    }
+
+    function init(){
+        cursor = new Cursor()
+        if(localStorage.getItem("svg-edit-save")!=undefined){
+            //importEdit(JSON.parse(localStorage.getItem("svg-edit-save")))
+        }
+    }
+
+
+    function updateUI(){
+        container.innerHTML = ""
+        document.getElementById("controls").style.display = "none"
+        document.getElementById("rect").style.display = "none"
+        document.getElementById("poly").style.display = "none"
+        document.getElementById("circ").style.display = "none"
+
+        for(let i=0; i<objects.length; i++){
+            var p = document.createElement("p")
+
+            if(objects[i].t == "rect"){
+                var type = "Rectangle"
+                p.innerHTML = "<b>"+type+"</b><em>"+objects[i].x+" "+objects[i].y+" "+objects[i].w+" "+objects[i].h+"</em>"
+            }
+
+            // if(objects[i].t == "poly"){
+            //     var type = "Polygon"
+            //     p.innerHTML = "<b>"+type+"</b><em>"+objects[i].x+" "+objects[i].y+"</em>"
+            // }
+
+            if(objects[i].t == "circ"){
+                var type = "Circle"
+                p.innerHTML = "<b>"+type+"</b><em>"+objects[i].x+" "+objects[i].y+"</em>"
+            }
+
+
+            if(editIndex == i){
+                p.style.background = "red"
+                p.style.color = "white"
+            }
+
+            p.setAttribute("onclick","editIndex = "+i+"; updateUI()")
+
+            if(editIndex != null){
+                
+                document.getElementById("controls").style.display = "block"
+
+                document.getElementById("x").value = objects[editIndex].x
+                document.getElementById("y").value = objects[editIndex].y
+
+                if(objects[editIndex].t == "rect"){
+                    document.getElementById("rect").style.display = "block"
+                    document.getElementById("w").value = objects[editIndex].w
+                    document.getElementById("h").value = objects[editIndex].h
+                }
+                
+                // if(objects[editIndex].t == "poly"){
+                //     document.getElementById("poly").style.display = "block"
+                //     document.getElementById("cp").checked = objects[editIndex].cp
+                // }
+
+                if(objects[editIndex].t == "circ"){
+                    document.getElementById("circ").style.display = "block"
+                    document.getElementById("r").value = objects[editIndex].r
+                    document.getElementById("sA").value = objects[editIndex].sA/(Math.PI/180)
+                    document.getElementById("eA").value = objects[editIndex].eA/(Math.PI/180)
+                }
+
+                document.getElementById("lw").value = objects[editIndex].linewidth
+                document.getElementById("ga").value = objects[editIndex].opacity
+                document.getElementById("fill").value = objects[editIndex].color[1]
+                document.getElementById("stroke").value = objects[editIndex].color[0]
+                document.getElementById("fCheck").checked = objects[editIndex].fill
+                document.getElementById("sCheck").checked = objects[editIndex].stroke
+            }
+            
+
+            container.append(p)
+            
+        }
+    }
+
+    class Rectangle {
+        constructor(x,y,w,h,i){
+            this.x = x
+            this.y = y
+            this.w = w
+            this.h = h
+            this.i = i
+            this.t = "rect"
+
+            this.points = [{x:0,y:0,drag:false},{x:0,y:0,drag:false},{x:0,y:0,drag:false},{x:0,y:0,drag:false}]
+            this.drag = {x:null,y:null}
+
+            this.fill = true
+            this.stroke = true
+            this.color = ["#000000", "#ffffff"]
+            this.linewidth = 1
+            this.opacity = 1
+        }
+
+        update(){
+            if(this.drag.x != null){
+                let diff = Math.floor(this.drag.x[0] - cursor.x)
+
+                if(this.w+diff > 5 && this.drag.x[1] == 0){
+                    this.x -= diff
+                    this.w += diff
+                    updateUI()
+                }
+                else if(this.w-diff > 5 && this.drag.x[1] == 1){
+                    this.w -= diff
+                    updateUI()
+                }
+
+                else if(this.drag.x[1] == 2){
+                    this.x -= diff
+                    updateUI()
+                }
+
+                if(!cursor.click){
+                    this.drag.x = null
+                    this.points[0].drag = this.points[1].drag = this.points[2].drag = this.points[3].drag = false
+                }else{
+                    this.drag.x[0] = cursor.x
+                }
+            }
+
+            if(this.drag.y != null){
+                let diff = Math.floor(this.drag.y[0] - cursor.y)
+
+                if(this.h+diff > 5 && this.drag.y[1] == 0){
+                    this.y -= diff
+                    this.h += diff
+                    updateUI()
+                }
+
+                else if(this.h-diff > 5 && this.drag.y[1] == 1){
+                    this.h -= diff
+                    updateUI()
+                }
+
+                else if(this.drag.y[1] == 2){
+                    this.y -= diff
+                    updateUI()
+                }
+
+                if(!cursor.click){
+                    this.drag.y = null
+                    this.points[0].drag = this.points[1].drag = this.points[2].drag = this.points[3].drag = false
+                }else{
+                    this.drag.y[0] = cursor.y
+                }
+            }
+            
+            if(cursor.click){
+                if(cursor.x > this.x-5 && cursor.x < this.x+this.w+5 && cursor.y > this.y-5 && cursor.y < this.y+this.h+5){
+                    if(editIndex == null){
+                        editIndex = this.i
+                        updateUI()
+                    }
+                }else if(editIndex == this.i){
+                    editIndex = null
+                    updateUI()
+                }
+                
+                if(editIndex != this.i){
+                    this.drag.x = null
+                    this.drag.y = null
+                    return
+                }
+
+                this.points[0].x = this.points[3].x = this.x-5
+                this.points[1].x = this.points[2].x = this.x+this.w-5
+                this.points[0].y = this.points[1].y = this.y-5
+                this.points[2].y = this.points[3].y = this.y+this.h-5
+
+                if(!this.points[0].drag && !this.points[1].drag && !this.points[2].drag && !this.points[3].drag){
+                    for(let i=0; i<this.points.length; i++){
+                        if(cursor.x > this.points[i].x && cursor.x < this.points[i].x+10 && cursor.y > this.points[i].y && cursor.y < this.points[i].y+10){
+                            this.points[i].drag = true
+                            break;
+                        }
+                    }
+                }
+                
+                if(this.drag.x == null && this.drag.y == null){
+                    if(this.points[0].drag){
+                        this.drag.x = [cursor.x,0]
+                        this.drag.y = [cursor.y,0]
+                    }
+
+                    else if(this.points[1].drag){
+                        this.drag.x = [cursor.x,1]
+                        this.drag.y = [cursor.y,0]
+                    }
+
+                    else if(this.points[2].drag){
+                        this.drag.x = [cursor.x,1]
+                        this.drag.y = [cursor.y,1]
+                    }
+
+                    else if(this.points[3].drag){
+                        this.drag.x = [cursor.x,0]
+                        this.drag.y = [cursor.y,1]
+                    }
+
+                    else if(cursor.x > this.x && cursor.y > this.y && cursor.x < this.x+this.w && cursor.y < this.y+this.h){
+                        this.drag.x = [cursor.x,2]
+                        this.drag.y = [cursor.y,2]
+                    }
+                }
+            }
+        }
+
+        draw(){
+            ctx.globalAlpha = this.opacity
+            ctx.lineWidth = this.linewidth
+
+            if(this.fill){
+                ctx.fillStyle = this.color[1]
+                if(this.stroke){
+                    ctx.fillRect(this.x+this.linewidth/2,this.y+this.linewidth/2,this.w-this.linewidth,this.h-this.linewidth)
+                }else{
+                    ctx.fillRect(this.x,this.y,this.w,this.h)
+                }
+                
+            }
+
+            if(this.stroke){
+                ctx.strokeStyle = this.color[0]
+                ctx.strokeRect(this.x+this.linewidth/2,this.y+this.linewidth/2,this.w-this.linewidth,this.h-this.linewidth)
+            }
+            ctx.globalAlpha = 1
+        }
+    }
+
+
+    // class Polygon {
+    //     constructor(x,y,i){
+    //         this.i = i
+
+    //         this.x = x
+    //         this.y = y
+
+    //         this.t = "poly"
+    //         this.points = [{x:0,y:0,drag:false,e:false}]
+    //         this.drag = {x:null,y:null}
+    //         this.cp = true
+
+    //         this.path = ""
+
+    //         this.fill = true
+    //         this.stroke = true
+    //         this.color = ["#000000", "#ffffff"]
+    //         this.linewidth = 1
+    //         this.opacity = 1
+    //     }
+
+    //     update(){
+
+    //         if(cursor.state == "point" && editIndex == this.i){
+
+    //             let x = this.x
+    //             let y = this.y
+
+    //             for(let i = 0; i<this.points.length-1; i++){
+    //                 x+=this.points[i].x
+    //                 y+=this.points[i].y
+    //             }
+
+    //             if(this.points[this.points.length-1].e == false){
+    //                 x+=this.points[this.points.length-1].x
+    //                 y+=this.points[this.points.length-1].y
+    //                 this.points.push({x:cursor.x-x,y:cursor.y-y,drag:false,e:true})
+    //             }else{
+    //                 this.points[this.points.length-1].y = cursor.y-y
+    //                 this.points[this.points.length-1].x = cursor.x-x
+    //             }
+
+    //             if(cursor.click){
+    //                 cursor.state = ""
+    //                 this.points[this.points.length-1].e = false
+    //             }
+    //         }
+
+    //         if(this.drag.x != null){
+    //             let diff = Math.floor(this.drag.x[0] - cursor.x)
+    //             let index = null
+
+    //             if(this.drag.x[1]){
+
+    //                 this.x -= diff
+    //                 updateUI()
+
+    //             }else{
+
+    //                 for(let i=0; i<this.points.length; i++){
+    //                     if(this.points[i].drag){
+    //                         index = i
+    //                         if(i == 0){
+    //                             this.x -= diff
+    //                         }else{
+    //                             this.points[i].x -= diff
+    //                         }
+    //                     }else if(index != null && index + 1 == i){
+    //                         this.points[i].x += diff
+    //                     }
+    //                 }
+    //             }   
+
+    //             if(!cursor.click){
+    //                 this.drag.x = null
+    //                 if(index != null){
+    //                     this.points[index].drag = false
+    //                 }
+    //             }else{
+    //                 this.drag.x[0] = cursor.x
+    //                 updateUI()
+    //             }
+    //         }
+
+    //         if(this.drag.y != null){
+    //             let diff = Math.floor(this.drag.y[0] - cursor.y)
+    //             let index = null
+
+    //             if(this.drag.y[1]){
+
+    //                 this.y -= diff
+    //                 updateUI()
+
+    //             }else{
+                
+    //                 for(let i=0; i<this.points.length; i++){
+    //                     if(this.points[i].drag){
+    //                         index = i
+    //                         if(i == 0){
+    //                             this.y -= diff
+    //                         }else{
+    //                             this.points[i].y -= diff
+    //                         }
+    //                     }else if(index != null && index + 1 == i){
+    //                         this.points[i].y += diff
+    //                     }
+    //                 }
+    //             }
+
+    //             if(!cursor.click){
+    //                 this.drag.y = null
+    //                 if(index != null){
+    //                     this.points[index].drag = false
+    //                 }
+    //             }else{
+    //                 this.drag.y[0] = cursor.y
+    //                 updateUI()
+    //             }
+    //         }
+
+    //         if(cursor.click && this.drag.x == null && this.drag.y == null){
+
+    //             let x = this.x
+    //             let y = this.y
+
+    //             for(let i=0; i<this.points.length; i++){
+    //                 x += this.points[i].x
+    //                 y += this.points[i].y
+    //                 if(cursor.x > x-5 && cursor.x < x+5 && cursor.y > y-5 && cursor.y < y+5){
+    //                     this.points[i].drag = true
+    //                     break;
+    //                 }
+    //             }
+    //         }
+            
+
+    //         if(this.drag.x == null && this.drag.y == null){
+    //             for(let i=0; i<this.points.length; i++){
+    //                 if(this.points[i].drag){
+    //                     this.drag.x = [cursor.x,0]
+    //                     this.drag.y = [cursor.y,0]
+    //                     break
+    //                 }
+    //             }
+    //         }
+
+
+    //         let x = this.x
+    //         let y = this.y
+    //         let points = []
+
+    //         for(let i = 0; i<this.points.length; i++){
+    //             x+=this.points[i].x
+    //             y+=this.points[i].y
+    //             points.push({x:x,y:y})
+    //         }
+
+    //         if(this.drag.x == null && this.drag.y == null){
+    //             if(polyPoint(points,cursor.x,cursor.y) && cursor.click){
+    //                 this.drag.x = [cursor.x,1]
+    //                 this.drag.y = [cursor.y,1]
+    //             }
+    //         }
+
+    //         if(cursor.click){
+    //             if(polyPoint(points,cursor.x,cursor.y)){
+    //                 console.log("test")
+    //                 if(editIndex == null){
+    //                     editIndex = this.i
+    //                     updateUI()
+                        
+    //                 }
+    //             }else if(editIndex == this.i && this.drag.x == null){
+    //                 editIndex = null
+    //                 updateUI()
+    //             }
+    //         }
+
+    //         if(editIndex != this.i){
+    //             this.drag.x = null
+    //             this.drag.y = null
+    //             return
+    //         }
+    //     }
+
+    //     draw(){
+    //         ctx.globalAlpha = this.opacity
+    //         ctx.lineWidth = this.linewidth
+
+    //         let path = "m "+this.x+" "+this.y
+
+    //         for(let i = 0; i < this.points.length; i++){
+    //             path += " l "+(this.points[i].x)+" "+(this.points[i].y)
+    //         }
+
+    //         if(this.cp){
+    //             path += " Z"
+    //         }
+
+    //         let poly = new Path2D(this.path)
+
+    //         if(this.fill){
+    //             ctx.fillStyle = this.color[1]
+    //             ctx.fill(poly)
+    //         }
+
+    //         if(this.stroke){
+    //             ctx.strokeStyle = this.color[0]
+    //             ctx.stroke(poly)
+    //         }
+
+    //         ctx.globalAlpha = 1
+    //     }
+    // }
+
+
+    class Circle {
+        constructor(x,y,r,i){
+            this.i = i
+
+            this.x = x
+            this.y = y
+            this.r = r
+            this.sA = 0
+            this.eA = 2*Math.PI
+
+            this.t = "circ"
+            this.point = {x:this.x,y:this.y-this.r,drag:false}
+            this.drag = {x:null,y:null}
+
+            this.fill = true
+            this.stroke = true
+            this.color = ["#000000", "#ffffff"]
+            this.linewidth = 1
+            this.opacity = 1
+        }
+
+        changeRadius(newRadius){
+            this.r = newRadius
+            this.point = {x:this.x,y:this.y-this.r,drag:false}
+        }
+
+        update(){
+            if(this.drag.x != null){
+                let diff = Math.floor(this.drag.x[0] - cursor.x)
+
+                this.point.x -= diff
+
+                if(this.drag.x[1]){
+                    this.x -= diff
+                }
+
+                updateUI()
+
+                if(!cursor.click){
+                    this.drag.x = null
+                    this.point.drag = false
+                }else{
+                    this.drag.x[0] = cursor.x
+                    updateUI()
+                }
+            }
+
+            if(this.drag.y != null){
+                let diff = Math.floor(this.drag.y[0] - cursor.y)
+
+                this.point.y -= diff
+                if(this.drag.y[1]){
+                    this.y -= diff
+                }
+                updateUI()
+
+                if(!cursor.click){
+                    this.drag.y = null
+                    this.point.drag = false
+                }else{
+                    this.drag.y[0] = cursor.y
+                    updateUI()
+                }
+            }
+
+            
+            let distX = this.x - this.point.x
+            let distY = this.y - this.point.y
+            let dist = Math.sqrt(distX**2+distY**2)
+
+            this.r = Math.floor(dist)
+
+
+            if(cursor.click){
+
+                if(cursor.x > this.point.x-5 && cursor.x < this.point.x+5 && cursor.y > this.point.y-5 && cursor.y < this.point.y+5){
+                    this.point.drag = true
+                }
+            }
+
+
+            if(this.drag.x == null && this.drag.y == null){
+                if(circPoint(this.x,this.y,this.r,cursor.x,cursor.y) && cursor.click){
+                    this.drag.x = [cursor.x,1]
+                    this.drag.y = [cursor.y,1]
+                }
+                if(this.point.drag){
+                    this.drag.x = [cursor.x,0]
+                    this.drag.y = [cursor.y,0]
+                }
+            }
+
+
+
+            if(cursor.click){
+                if(circPoint(this.x,this.y,this.r,cursor.x,cursor.y)){
+                    if(editIndex == null){
+                        editIndex = this.i
+                        updateUI()
+                        
+                    }
+                }else if(editIndex == this.i && this.drag.x == null){
+                    editIndex = null
+                    updateUI()
+                }
+            }
+
+            if(editIndex != this.i){
+                this.drag.x = null
+                this.drag.y = null
+                this.changeRadius(this.r)
+                return
+            }
+        }
+
+        draw(){
+            ctx.globalAlpha = this.opacity
+            ctx.lineWidth = this.linewidth
+            ctx.beginPath()
+
+            if(this.stroke){
+                ctx.arc(this.x,this.y,Math.abs(this.r-this.linewidth/2),this.sA,this.eA)
+            }else{
+                ctx.arc(this.x,this.y,this.r,this.sA,this.eA)
+            }
+            
+
+            if(this.fill){
+                
+                ctx.fillStyle = this.color[1]
+                ctx.fill()
+            }
+            
+            if(this.stroke){
+                ctx.strokeStyle = this.color[0]
+                ctx.stroke()
+            }
+
+            ctx.closePath()
+            ctx.globalAlpha = 1
+        }
+    }
+
+
+    class Cursor{
+        constructor(){
+            this.x = 0
+            this.y = 0
+            this.click = false
+            this.state = "rect"
+        }
+
+        update(){
+            if(this.click){
+                if(this.state == "rect"){
+                    editIndex = objects.length
+                    objects.push(new Rectangle(this.x-30,this.y-30,60,60,objects.length))
+                    this.click = false
+                    updateUI()
+                }
+                // if(this.state == "poly"){
+                //     editIndex = objects.length
+                //     objects.push(new Polygon(this.x,this.y,objects.length))
+                //     this.click = false
+                //     updateUI()
+                // }
+                if(this.state == "circ"){
+                    editIndex = objects.length
+                    objects.push(new Circle(this.x,this.y,30,objects.length))
+                    this.click = false
+                    updateUI()
+                }
+                this.state = ""
+            }
+        }
+
+        draw(){
+            if(this.state == "rect"){
+                ctx.lineWidth = 1
+                ctx.fillStyle = "#fff"
+                ctx.strokeStyle = "#000"
+                ctx.fillRect(this.x-30, this.y-30, 60, 60)
+                ctx.strokeRect(this.x-30,this.y-30,60,60)
+            }
+
+            // if(this.state == "poly"){
+            //     ctx.lineWidth = 1
+            //     ctx.fillStyle = "#fff"
+            //     ctx.strokeStyle = "#000"
+            //     ctx.beginPath()
+            //     ctx.arc(this.x,this.y,5,0,2*Math.PI)
+            //     ctx.fill()
+            //     ctx.stroke()
+            //     ctx.closePath()
+            // }
+
+            if(this.state == "circ"){
+                ctx.lineWidth = 1
+                ctx.fillStyle = "#fff"
+                ctx.strokeStyle = "#000"
+                ctx.beginPath()
+                ctx.arc(this.x,this.y,30,0,2*Math.PI)
+                ctx.fill()
+                ctx.stroke()
+                ctx.closePath()
+            }
+        }
+    }
+
+    init()
+    update()
+
+    canvas.addEventListener("contextmenu", (e)=>{
+        e.preventDefault()
+    })
+
+    canvas.onmousedown = (e) => {
+        if(e.button == 2){
+            cursor.state = ""
+            editIndex = null
+            return
+        }
+        cursor.click = true
+    }
+
+    canvas.onmouseup = () => {
+        cursor.click = false
+    }
+
+    canvas.onmousemove = (e) => {
+        cursor.x = Math.floor(e.offsetX/5)*5
+        cursor.y = Math.floor(e.offsetY/5)*5
+    }
+
+    document.onkeydown = (e) => {
+        if(e.key == "r"){
+            cursor.state = "rect"
+            editIndex = null
+        }
+
+        // if(e.key == "p"){
+        //     cursor.state = "poly"
+        //     editIndex = null
+        // }
+
+        // if(e.key == "="){
+        //     if(objects[editIndex].t == "poly"){
+        //         cursor.state = "point"
+        //     }
+        // }
+
+        // if(e.key == "-"){
+        //     if(objects[editIndex].t == "poly" && objects[editIndex].points.length > 1){
+        //         objects[editIndex].points.splice(objects[editIndex].points.length-1,1)
+        //     }
+        // }
+
+        if(e.key == "c"){
+            cursor.state = "circ"
+            editIndex = null
+        }
+
+        if(editIndex != null){
+            if(e.key == "d"){
+                objects.splice(editIndex,1)
+                for(let i = editIndex; i<objects.length; i++){
+                    objects[i].i = i
+                }
+                editIndex = null
+                updateUI()
+            }
+            if(e.key == "ArrowRight"){
+                objects[editIndex].x ++
+
+                if(objects[editIndex].t == "circ"){
+                    objects[editIndex].point.x++
+                }
+            }
+            if(e.key == "ArrowLeft"){
+                objects[editIndex].x --
+                if(objects[editIndex].t == "circ"){
+                    objects[editIndex].point.x--
+                }
+            }
+            if(e.key == "ArrowDown"){
+                objects[editIndex].y ++
+                if(objects[editIndex].t == "circ"){
+                    objects[editIndex].point.y++
+                }
+            }
+            if(e.key == "ArrowUp"){
+                objects[editIndex].y --
+                if(objects[editIndex].t == "circ"){
+                    objects[editIndex].point.y--
+                }
+            }
+
+            if(objects[editIndex].t == "circ"){
+                objects[editIndex].changeRadius(objects[editIndex].r)
+            }
+
+            if(e.key == "Tab"){
+                e.preventDefault()
+                var oldObject = objects[editIndex]
+                var newObject
+
+                if(oldObject.t == "rect"){
+                    newObject = new Rectangle(oldObject.x,oldObject.y,oldObject.w,oldObject.h,objects.length)
+
+                    newObject.fill = oldObject.fill
+                    newObject.stroke = oldObject.stroke
+                    newObject.color = [oldObject.color[0],oldObject.color[1]]
+                    newObject.linewidth = oldObject.linewidth
+                    newObject.opacity = oldObject.opacity
+                }
+
+                // if(oldObject.t == "poly"){
+                //     newObject = new Polygon(oldObject.x,oldObject.y,objects.length)
+
+                //     newObject.points = oldObject.points
+                //     newObject.fill = oldObject.fill
+                //     newObject.stroke = oldObject.stroke
+                //     newObject.color = [oldObject.color[0],oldObject.color[1]]
+                //     newObject.linewidth = oldObject.linewidth
+                //     newObject.opacity = oldObject.opacity
+                //     newObject.cp = oldObject.cp
+                // }
+
+                if(oldObject.t == "circ"){
+                    newObject = new Circle(oldObject.x,oldObject.y,oldObject.r,objects.length)
+
+                    newObject.sA = oldObject.sA
+                    newObject.eA = oldObject.eA
+                    newObject.point = {x:oldObject.point.x,y:oldObject.point.y,drag:false}
+                    newObject.fill = oldObject.fill
+                    newObject.stroke = oldObject.stroke
+                    newObject.color = [oldObject.color[0],oldObject.color[1]]
+                    newObject.linewidth = oldObject.linewidth
+                    newObject.opacity = oldObject.opacity
+                    newObject.cp = oldObject.cp
+                }
+                
+                objects.push(newObject)
+                editIndex = objects.length-1
+            }
+
+            if(e.key == ","){
+                if(editIndex > 0){
+                    var object = objects[editIndex]
+
+                    objects.splice(editIndex,1)
+                    objects.splice(editIndex-1,0,object)
+
+                    for(let i = editIndex-1; i<objects.length; i++){
+                        objects[i].i = i
+                    }
+
+                    editIndex --
+                }
+            }
+
+            if(e.key == "."){
+                if(editIndex < objects.length-1){
+                    var object = objects[editIndex]
+
+                    objects.splice(editIndex,1)
+                    objects.splice(editIndex+1,0,object)
+
+                    for(let i = editIndex; i<objects.length; i++){
+                        objects[i].i = i
+                    }
+
+                    editIndex ++
+                }
+            }
+
+            updateUI()
+        }
+    }
+
+function exportSVG(){
+    let data = []
+
+    let lastFill = ""
+    let lastStroke = ""
+    let lastAlpha = 1
+    let lastLW = 1
+
+    for(let i = 0; i<objects.length; i++){
+        let o = objects[i]
+
+        if(lastFill != o.color[1] && o.fill){
+            data.push("c "+o.color[1]+" 1"+(o.color[1] == o.color[0] ? " 1," : ","))
+            lastFill = o.color[1]
+        }
+        if(lastStroke != o.color[0] && o.stroke){
+            data.push("c "+o.color[0]+(o.color[1] == o.color[0] ? " 1" : " 0")+" 1,")
+            lastStroke = o.color[0]
+        }
+        if(lastAlpha != o.opacity){
+            data.push("g "+o.opacity+",")
+            lastAlpha = o.opacity
+        }
+        if(lastLW != o.linewidth && o.stroke){
+            data.push("w "+o.linewidth+",")
+            lastLW = o.linewidth
+        }
+
+        if(o.t == "rect"){
+            data.push("r "+o.x+" "+o.y+" "+o.w+" "+o.h+" "+(o.fill ? 1 : 0)+(o.stroke ? " 1" : "")+",")
+        }
+
+        if(o.t == "circ"){
+
+
+            data.push("a "+o.x+" "+o.y+" "+o.r+" "+(o.sA/(Math.PI/180))+" "+(o.eA/(Math.PI/180))+" "+(o.fill ? 1 : 0)+(o.stroke ? " 1" : "")+",")
+        }
+
+        if(o.t == "poly"){
+
+
+            let path = "m "+o.x+" "+o.y
+
+            for(let i = 0; i < o.points.length; i++){
+                path += " l "+(o.points[i].x)+" "+(o.points[i].y)
+            }
+
+            if(o.cp){
+                path += " Z"
+            }
+
+            data.push("p "+(o.fill ? "f" : "")+(o.stroke ? "s " : " ")+o.path+",")
+        }
+    }
+    data = data.join(" ")
+
+    let object = {d:data,w:canvas.width,h:canvas.height}
+
+    let win = window.open("", "Page Help", "newwindow", "width=1100, height=700, top=100, left=100")
+    win.document.body.innerHTML = JSON.stringify(object)
+}
+
+function exportEdit(){
+    let data = JSON.stringify({data:objects,w:canvas.width,h:canvas.height})
+    let win = window.open("", "Page Help", "newwindow", "width=1100, height=700, top=100, left=100")
+    win.document.body.innerHTML = data
+}
+
+function importEdit(data = []){
+    if(data.length == 0){
+        data = JSON.parse(prompt("Please input data"))
+    }
+
+    canvas.width = data.w
+    canvas.height = data.h
+
+    for(let i = 0; i<data.data.length; i++){
+        var oldObject = data.data[i]
+        var newObject
+
+        if(oldObject.t == "rect"){
+            newObject = new Rectangle(oldObject.x,oldObject.y,oldObject.w,oldObject.h,objects.length)
+
+            newObject.fill = oldObject.fill
+            newObject.stroke = oldObject.stroke
+            newObject.color = [oldObject.color[0],oldObject.color[1]]
+            newObject.linewidth = oldObject.linewidth
+            newObject.opacity = oldObject.opacity
+        }
+
+        if(oldObject.t == "poly"){
+            newObject = new Polygon(oldObject.x,oldObject.y,objects.length)
+
+            newObject.points = oldObject.points
+            newObject.path = oldObject.path
+            newObject.fill = oldObject.fill
+            newObject.stroke = oldObject.stroke
+            newObject.color = [oldObject.color[0],oldObject.color[1]]
+            newObject.linewidth = oldObject.linewidth
+            newObject.opacity = oldObject.opacity
+            newObject.cp = oldObject.cp
+        }
+
+        if(oldObject.t == "circ"){
+            newObject = new Circle(oldObject.x,oldObject.y,oldObject.r,objects.length)
+
+            newObject.sA = oldObject.sA
+            newObject.eA = oldObject.eA
+            newObject.point = {x:oldObject.point.x,y:oldObject.point.y,drag:false}
+            newObject.fill = oldObject.fill
+            newObject.stroke = oldObject.stroke
+            newObject.color = [oldObject.color[0],oldObject.color[1]]
+            newObject.linewidth = oldObject.linewidth
+            newObject.opacity = oldObject.opacity
+            newObject.cp = oldObject.cp
+        }
+        
+        objects.push(newObject)
+        updateUI()
+    }
+}
+
+function save(){
+    localStorage.setItem('svg-edit-save', JSON.stringify({data:objects,w:canvas.width,h:canvas.height}))
+}
+
+
+// POLYGON/POINT
+function polyPoint(vertices, px, py) {
+  let collision = false;
+
+  // go through each of the vertices, plus
+  // the next vertex in the list
+  let next = 0;
+  for (let current=0; current<vertices.length; current++) {
+
+    // get next vertex in list
+    // if we've hit the end, wrap around to 0
+    next = current+1;
+    if (next == vertices.length){next = 0;}
+
+    // get the PVectors at our current position
+    // this makes our if statement a little cleaner
+    vc = vertices[current];    // c for "current"
+    vn = vertices[next];       // n for "next"
+
+    // compare position, flip 'collision' variable
+    // back and forth
+    if (((vc.y >= py && vn.y < py) || (vc.y < py && vn.y >= py)) &&
+         (px < (vn.x-vc.x)*(py-vc.y) / (vn.y-vc.y)+vc.x)) {
+            collision = !collision;
+    }
+  }
+  return collision;
+}
+
+function circPoint(cx,cy,r,px,py){
+    let distX = cx - px
+    let distY = cy - py
+    let dist = Math.sqrt(distX**2+distY**2)
+
+    if(dist < r+5){
+        return true
+    }else{
+        return false
+    }
+}
+</script>
