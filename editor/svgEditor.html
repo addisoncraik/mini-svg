@@ -323,84 +323,88 @@ function loop(){
  * @param {string} t - The instruction data string (e.g., "c red 1, r 0 0 10 10 1 0,")
  * @param {Array} e - Transformation array [xPos, yPos, xScale, yScale]
  */
-function svg(t, e) {
-  // Save current context and apply initial transformations
-  ctx.save();
-  ctx.translate(e[0], e[1]);
-  ctx.scale(e[2], e[3]);
+// function svg(t, e) {
+//   // Save current context and apply initial transformations
+//   ctx.save();
+//   ctx.translate(e[0], e[1]);
+//   ctx.scale(e[2], e[3]);
 
-  var a = t.split(" "); // Split the instruction string into parts
+//   var a = t.split(" "); // Split the instruction string into parts
 
-  // Iterate through the instruction string character by character
-  while (a.length > 0) {
-    var c = a[0]; // Current command character
-    var path = new Path2D(); // Initialize a new path for potential path commands
-    var fill_stroke = "00";
-    //var a = t.slice(i + 2, t.length-1).split(" "); // Parse the arguments for this command
+//   // Iterate through the instruction string character by character
+//   while (a.length > 0) {
+//     var c = a[0]; // Current command character
+//     var path = new Path2D(); // Initialize a new path for potential path commands
+//     var fill_stroke = "00";
+//     //var a = t.slice(i + 2, t.length-1).split(" "); // Parse the arguments for this command
 
-    if (c == "p") {
+//     if (c == "p") {
         
-        let i = a.join(" ")
-        path = new Path2D(i.slice(2, i.indexOf(":")));
-        a = i.slice(i.indexOf(":") + 1).trim().split(" ");
-        fill_stroke = a[0];
+//         let i = a.join(" ")
+//         path = new Path2D(i.slice(2, i.indexOf(":")));
+//         a = i.slice(i.indexOf(":") + 1).trim().split(" ");
+//         fill_stroke = a[0];
 
-    } else if (c == "w") {
-      // Line Width
-      ctx.lineWidth = a[1];
+//     } else if (c == "w") {
+//       // Line Width
+//       ctx.lineWidth = a[1];
 
-    } else if (c == "g") {
-      // Global Alpha (Transparency)
-      ctx.globalAlpha = a[1];
+//     } else if (c == "g") {
+//       // Global Alpha (Transparency)
+//       ctx.globalAlpha = a[1];
 
-    } else if (c == "s") {
-      // Shadow Blur (scaled based on the X scale of the drawing)
-      ctx.shadowBlur = a[1] * Math.abs(e[2]);
+//     } else if (c == "s") {
+//       // Shadow Blur (scaled based on the X scale of the drawing)
+//       ctx.shadowBlur = a[1] * Math.abs(e[2]);
 
-    } else if (c == "c") {
-      // Color Command: [color, fillBool, strokeBool, shadowBool]
-      if (a[2][0] == "1") ctx.fillStyle = a[1];
-      if (a[2][1] == "1") ctx.strokeStyle = a[1];
-      if (a[2][2] == "1") ctx.shadowColor = a[1];
-      // Skip the index forward past the color string length
-      a.shift();
+//     } else if (c == "c") {
+//       // Color Command: [color, fillBool, strokeBool, shadowBool]
+//       if (a[2][0] == "1") ctx.fillStyle = a[1];
+//       if (a[2][1] == "1") ctx.strokeStyle = a[1];
+//       if (a[2][2] == "1") ctx.shadowColor = a[1];
+//       // Skip the index forward past the color string length
+//       a.shift();
 
-    } else if (c == "a") {
-      // Arc Command: [x, y, radius, startAngle, endAngle, fill, stroke]
-      path.arc(a[1], a[2], a[3], a[4] * 0.01745, a[5] * 0.01745);
-      fill_stroke = a[6];
+//     } else if (c == "a") {
+//       // Arc Command: [x, y, radius, startAngle, endAngle, fill, stroke]
+//       path.arc(a[1], a[2], a[3], a[4] * 0.01745, a[5] * 0.01745);
+//       fill_stroke = a[6];
 
-    } else if (c == "r") {
-      // Rect Command: [x, y, width, height, fill, stroke]
-      path.rect(a[1], a[2], a[3], a[4]);
-      fill_stroke = a[5];
+//     } else if (c == "r") {
+//       // Rect Command: [x, y, width, height, fill, stroke]
+//       path.rect(a[1], a[2], a[3], a[4]);
+//       fill_stroke = a[5];
 
-    } else if (c == "<") {
-      // Save state
-      ctx.save();
+//     } else if (c == "<") {
+//       // Save state
+//       ctx.save();
 
-    } else if (c == ">") {
-      // Restore state
-      ctx.restore();
+//     } else if (c == ">") {
+//       // Restore state
+//       ctx.restore();
 
-    } else if (c == "t") {
-      // Translate
-      ctx.translate(a[1], a[2]);
+//     } else if (c == "t") {
+//       // Translate
+//       ctx.translate(a[1], a[2]);
 
-    } else if (c == "q") {
-      // Rotate (converts degrees to radians)
-      ctx.rotate(a[1] * 0.01745);
-    }
+//     } else if (c == "q") {
+//       // Rotate (converts degrees to radians)
+//       ctx.rotate(a[1] * 0.01745);
+//     }
 
-    a.shift();
-    if (fill_stroke[0] == "1") ctx.fill(path);
-    if (fill_stroke[1] == "1") ctx.stroke(path);
-  }
+//     a.shift();
+//     if (fill_stroke[0] == "1") ctx.fill(path);
+//     if (fill_stroke[1] == "1") ctx.stroke(path);
+//   }
 
-  // Final restore to clean up the initial translate/scale
-  ctx.restore();
-}
+//   // Final restore to clean up the initial translate/scale
+//   ctx.restore();
+// }
 
+
+//function svg(e,t){ctx.save();ctx.translate(t[0],t[1]);ctx.scale(t[2],t[3]);var c=e.split(" ");while(c.length>0){var i=c[0];var f=new Path2D;var x="00";if(i=="p"){let e=c.join(" ");f=new Path2D(e.slice(2,e.indexOf(":")));c=e.slice(e.indexOf(":")+1).trim().split(" ");x=c[0]}else if(i=="w"){ctx.lineWidth=c[1]}else if(i=="g"){ctx.globalAlpha=c[1]}else if(i=="s"){ctx.shadowBlur=c[1]*Math.abs(t[2])}else if(i=="c"){if(c[2][0]=="1")ctx.fillStyle=c[1];if(c[2][1]=="1")ctx.strokeStyle=c[1];if(c[2][2]=="1")ctx.shadowColor=c[1];c.shift()}else if(i=="a"){f.arc(c[1],c[2],c[3],c[4]*.01745,c[5]*.01745);x=c[6]}else if(i=="r"){f.rect(c[1],c[2],c[3],c[4]);x=c[5]}else if(i=="<"){ctx.save()}else if(i==">"){ctx.restore()}else if(i=="t"){ctx.translate(c[1],c[2])}else if(i=="q"){ctx.rotate(c[1]*.01745)}c.shift();if(x[0]=="1")ctx.fill(f);if(x[1]=="1")ctx.stroke(f)}ctx.restore()}
+
+function svg(a,b){var d=Math.abs;ctx.save(),ctx.translate(b[0],b[1]),ctx.scale(b[2],b[3]);for(var g=a.split(" ");0<g.length;){var e=g[0],h=new Path2D,i="00";if("p"==e){let a=g.join(" ");h=new Path2D(a.slice(2,a.indexOf(":"))),g=a.slice(a.indexOf(":")+1).trim().split(" "),i=g[0]}else"w"==e?ctx.lineWidth=g[1]:"g"==e?ctx.globalAlpha=g[1]:"s"==e?ctx.shadowBlur=g[1]*d(b[2]):"c"==e?("1"==g[2][0]&&(ctx.fillStyle=g[1]),"1"==g[2][1]&&(ctx.strokeStyle=g[1]),"1"==g[2][2]&&(ctx.shadowColor=g[1]),g.shift()):"a"==e?(h.arc(g[1],g[2],g[3],.01745*g[4],.01745*g[5]),i=g[6]):"r"==e?(h.rect(g[1],g[2],g[3],g[4]),i=g[5]):"<"==e?ctx.save():">"==e?ctx.restore():"t"==e?ctx.translate(g[1],g[2]):"q"==e&&ctx.rotate(.01745*g[1]);g.shift(),"1"==i[0]&&ctx.fill(h),"1"==i[1]&&ctx.stroke(h)}ctx.restore()}
 
 
 spawnButtons()
