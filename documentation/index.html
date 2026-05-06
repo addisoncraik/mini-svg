@@ -1,22 +1,209 @@
-<div id="content"><p><h1>SVG-Like Program For JS13k</h1><hr><br>Mini-SVG is a simple function developed to draw little SVG-like drawings through the html canvas 2d context (ctx). It takes in <b>2</b> parameters like so: <code>svg("svg-data",[xPos,yPos,xScale,yScale])</code><br><ul><li><code>svg-data</code> is a string that contains all the instructions for the drawing program</li><li><code>xPos</code> &amp; <code>yPos</code> is where your drawing is being drawn</li><li><code>xScale</code> &amp; <code>yScale</code> is the scale of your drawing</li></ul><br>To use the program you must put the following functions somewhere in your code:<br><br><code id='code' style="word-break: break-all;">function svg(t,e){for(ctx.save(),ctx.translate(e[0],e[1]),ctx.scale(e[2],e[3]),i=0;i&lt;t.length;i++){var c=t[i],a=d(t,i);"p"==c?(c=new Path2D(a.join(" ")),"s"!=(a=a[a.length-1])[1]&&"s"!=a[0]||ctx.stroke(c),"f"==a[0]&&ctx.fill(c)):"w"==c?ctx.lineWidth=a:"g"==c?ctx.globalAlpha=a:"s"==c?ctx.shadowBlur=a*Math.abs(e[2]):"c"==c?(parseInt(a[1])&&(ctx.fillStyle=a[0]),parseInt(a[2])&&(ctx.strokeStyle=a[0]),parseInt(a[3])&&(ctx.shadowColor=a[0]),i+=a[0].length+1):"a"==c?(ctx.beginPath(),ctx.arc(a[0],a[1],a[2],a[3]*.01745,a[4]*.01745),parseInt(a[5])&&ctx.fill(),parseInt(a[6])&&ctx.stroke()):"r"==c?(ctx.beginPath(),ctx.rect(a[0],a[1],a[2],a[3]),parseInt(a[4])&&ctx.fill(),parseInt(a[5])&&ctx.stroke()):"&lt;"==c?ctx.save():"&gt;"==c?ctx.restore():"t"==c?ctx.translate(a[0],a[1]):"q"==c&&ctx.rotate(a*.01745)}ctx.restore()}function d(t,e){return t.slice(e+2,t.indexOf(",",e+2)).split(" ")}</code><br><br><p style="text-align: center;">449 bytes gzipped (877 bytes uncompressed)</p><br><br><code>svg-data</code> has <b>11</b> possible instructions:<br><ol><li> <code>p</code> is equivalent to <code>new Path2D(svg-data)</code>, its syntax looks like: <code>p svg-data... fill/stroke,</code><ul><li><code>svg-data</code> consists of <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths" target="_blank">SVG path data</a>, a new path is created from that description.</li><li><code>fill/stroke</code> is a string indicating whether to stroke or fill <code>svg-data</code> if you put <code>f</code> it will fill, if you put <code>s</code> it will stroke, if you put <code>fs</code> it will do both.</li><li>Example: <code>"p m 0 0 l 100 0 l 50 100 l 0 0 fs,"</code></li></ul><br></li><li><code>a</code> is equivalent to <code>ctx.arc()</code>, its syntax look like: <code>a x y radius startAngle endAngle fill stroke,</code><ul><li><code>startAngle</code> &amp; <code>endAngle</code> are in degrees</li><li><code>fill</code> &amp; <code>stroke</code> are booleans for <code>ctx.fill()</code> and <code>ctx.stroke()</code> respectively</li><li>Example: <code>"a 50 50 10 0 360 0 1,"</code></li></ul><br></li><li><code>r</code> is equivalent to <code>ctx.rect()</code>, its syntax look like: <code>a x y width height fill stroke,</code><ul><li><code>fill</code> &amp; <code>stroke</code> are booleans for <code>ctx.fill()</code> and <code>ctx.stroke()</code> respectively</li><li>Example: <code>"r 0 0 100 10 1 0,"</code></li></ul><br></li><li><code>c</code> lets you set the color, its syntax looks like: <code>c color fill stroke shadow,</code><ul><li><code>fill</code>, <code>stroke</code> &amp; <code>shadow</code> are booleans for <code>ctx.fillStyle()</code>, <code>ctx.strokeStyle</code> and <code>ctx.shadowStyle</code> respectively</li><li>color can be any html eligible format <code>#hex</code>, <code>rgba()</code>, etc.</li><li>Example: <code>"c tomato 1 1 1,"</code></li></ul><br></li><li><code>w</code> is equivalent to <code>ctx.lineWidth</code>, its syntax look like: <code>w lineWidth,</code><ul><li><code>lineWidth</code> may need to be adjusted depending on the scale you set in the <code>svg()</code> function</li><li>Example: <code>"w 10,"</code></li></ul><br></li><li><code>g</code> is equivalent to <code>ctx.globalAlpha</code>, its syntax look like: <code>g alpha,</code><ul><li>Example: <code>"g 0.8,"</code> </li></ul><br></li><li><code>s</code> is equivalent to <code>ctx.shadowBlur</code>, its syntax look like: <code>s shadowBlur,</code><ul><li>Example: <code>"s 30,"</code></li></ul><br></li><li><code>t</code> is equivalent to <code>ctx.translate()</code>, its syntax look like: <code>t x y,</code><ul><li>Example: <code>"t 100 10,"</code></li></ul><br></li><li><code>q</code> is equivalent to <code>ctx.rotate()</code>, its syntax look like: <code>q angle,</code><ul><li><code>angle</code> is in degrees</li><li>Example: <code>"q 45,"</code></li></ul><br></li><li><code>&lt;</code> is equivalent to <code>ctx.save()</code><br></li><li><code>></code> is equivalent to <code>ctx.restore()</code></li></ol><br><br>Example of full <code>svg()</code> function:<br><br><blockquote><b>important</b></blockquote><blockquote>You <b>NEED</b> to put the <code>,</code> at the end of every instruction, even the last one.</blockquote><br><code id='code'>//coffee cup<br><br>svg("c #fff 1,p m 1 5 l 4 30 l 14 0 l 4 -30 f,c #6f4e37 1,p m 1 11 l 2 16 l 18 0 l 2 -16 f,c #000 1,r 5 17 5 1 1,r 11 17 3 1 1,r 10 19 7 1 1,r 2 0 20 2 1,c #0f0f0f 1,r 0 2 24 3 1,",[10,10,5,5]);</code><br><canvas id="c"></canvas><br><p style="text-align: center;">137 bytes gzipped (194 bytes uncompressed)</p></p></div>
+<div id="content">
+    <p>
+        <h1>SVG-Like Program For JS13k</h1>
+        <hr><br>
+        Mini-SVG is a simple function developed to draw little SVG-like drawings through the html canvas 2d context (ctx). It takes in <b>3</b> parameters like so: <code>svg("svg-data",[xPos,yPos,xScale,yScale],[palette])</code><br>
+        <ul>
+            <li><code>svg-data</code> is a string that contains all the instructions for the drawing program. <b>Every command and argument must be separated by a space.</b></li>
+            <li><code>xPos</code> &amp; <code>yPos</code> is where your drawing is being drawn</li>
+            <li><code>xScale</code> &amp; <code>yScale</code> is the scale of your drawing</li>
+            <li><code>palette</code> <b>(optional)</b> is an array of colors used to dynamically change the look of an svg without storing the exact same svg in different colors.</li>
+        </ul>
+        <br>To use the program you must put the following function somewhere in your code:<br><br>
+
+        <code id='main-code' style="word-break: break-all;">function svg(b,d,e=[]){ctx.save(),ctx.translate(d[0],d[1]),ctx.scale(d[2],d[3]);for(var c=b.split(" ");0&lt;c.length;){var f=c[0],g=new Path2D,h="00";if("p"==f){let a=c.join(" ");g=new Path2D(a.slice(2,a.indexOf(":"))),h=(c=a.slice(a.indexOf(":")+1).trim().split(" "))[0]}else"w"==f?ctx.lineWidth=c[1]:"g"==f?ctx.globalAlpha=c[1]:"s"==f?ctx.shadowBlur=c[1]*Math.abs(d[2]):"c"==f?("$"==c[1][0]&&(c[1]=e[c[1].slice(1)]),"1"==c[2][0]&&(ctx.fillStyle=c[1]),"1"==c[2][1]&&(ctx.strokeStyle=c[1]),"1"==c[2][2]&&(ctx.shadowColor=c[1]),c.shift()):"a"==f?(g.arc(c[1],c[2],c[3],.01745*c[4],.01745*c[5]),h=c[6]):"r"==f?(g.rect(c[1],c[2],c[3],c[4]),h=c[5]):"&lt;"==f?ctx.save():"&gt;"==f?ctx.restore():"t"==f?ctx.translate(c[1],c[2]):"q"==f&&ctx.rotate(.01745*c[1]);c.shift(),"1"==h[0]&&ctx.fill(g),"1"==h[1]&&ctx.stroke(g)}ctx.restore()}</code>
+        <br><br>
+        <p style="text-align: center;">492 bytes gzipped (816 bytes uncompressed)</p><br><br>
+
+        Many instructions rely on a 2-bit string to determine if a shape should be filled, stroked, or both. <br>
+        <table>
+            <tr>
+                <th>Flag</th>
+                <th>Fill Shape</th>
+                <th>Stroke Shape</th>
+            </tr>
+            <tr>
+                <td><code>10</code></td>
+                <td>Yes</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td><code>01</code></td>
+                <td>No</td>
+                <td>Yes</td>
+            </tr>
+            <tr>
+                <td><code>11</code></td>
+                <td>Yes</td>
+                <td>Yes</td>
+            </tr>
+        </table>
+
+        <code>svg-data</code> has <b>11</b> possible instructions:<br>
+        <ol>
+            <li> <code>p</code> is equivalent to <code>new Path2D(svg-data)</code>, its syntax looks like: <code>p svg-data... :flags</code>
+                <ul>
+                    <li><code>svg-data</code> consists of <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths" target="_blank">SVG path data</a>, a new path is created from that description.</li>
+                    <li>The path data <b>must</b> end with a colon <code>:</code> immediately followed by the 2-bit fill/stroke flags.</li>
+                    <li>Example: <code>"p m 0 0 l 100 0 l 50 100 z:10"</code> (This draws a filled triangle).</li>
+                </ul><br>
+            </li>
+            <li><code>a</code> is equivalent to <code>ctx.arc()</code>, its syntax looks like: <code>a x y radius startAngle endAngle flags</code>
+                <ul>
+                    <li><code>startAngle</code> &amp; <code>endAngle</code> are in degrees</li>
+                    <li><code>flags</code> is the 2-bit string for fill/stroke</li>
+                    <li>Example: <code>"a 50 50 10 0 360 11"</code> (This draws a filled and outlined circle with a 10px radius).</li>
+                </ul><br>
+            </li>
+            <li><code>r</code> is equivalent to <code>ctx.rect()</code>, its syntax look like: <code>r x y width height flags</code>
+                <ul>
+                    <li><code>flags</code> is the 2-bit string for fill/stroke</li>
+                    <li>Example: <code>"r 0 0 100 10 1"</code> (This draws a filled rectangle that is 100px wide and 10px tall).</li>
+                </ul><br>
+            </li>
+            <li><code>c</code> lets you set the color, its syntax looks like: <code>c color fill_stroke_shadow</code>
+                <ul>
+                    <li><code>fill_stroke_shadow</code> is a 3-bit string indicating whether to set <code>ctx.fillStyle</code>, <code>ctx.strokeStyle</code>, and <code>ctx.shadowColor</code> respectively.</li>
+
+                    <table>
+                        <tr>
+                            <th>Flag</th>
+                            <th>Fill</th>
+                            <th>Stroke</th>
+                            <th>Shadow</th>
+                        </tr>
+                        <tr>
+                            <td><code>100</code></td>
+                            <td>Yes</td>
+                            <td>No</td>
+                            <td>No</td>
+                        </tr>
+                        <tr>
+                            <td><code>010</code></td>
+                            <td>No</td>
+                            <td>Yes</td>
+                            <td>No</td>
+                        </tr>
+                        <tr>
+                            <td><code>111</code></td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                        </tr>
+                    </table>
+
+
+                    <li><code>color</code> can be any html eligible format <code>#hex</code>, <code>rgba()</code>, etc.</li>
+                    <li><b>Palette Lookup:</b> If <code>color</code> starts with <code>$</code>, it will grab the color from the <code>palette</code> array at that index. This lets you dynamically change the look of an svg without storing the exact same svg in different colors!</li>
+                    <li>Example: <code>"c $0 111"</code> (This uses the first color in your palette array to set the fill, stroke, and shadow).</li>
+                </ul><br>
+            </li>
+            <li><code>w</code> is equivalent to <code>ctx.lineWidth</code>, its syntax look like: <code>w lineWidth</code>
+                <ul>
+                    <li><code>lineWidth</code> may need to be adjusted depending on the scale you set in the <code>svg()</code> function</li>
+                    <li>Example: <code>"w 10"</code> (This makes your strokes 10px thick).</li>
+                </ul><br>
+            </li>
+            <li><code>g</code> is equivalent to <code>ctx.globalAlpha</code>, its syntax look like: <code>g alpha</code>
+                <ul>
+                    <li>Example: <code>"g 0.8"</code> (This sets the transparency to 80%).</li>
+                </ul><br>
+            </li>
+            <li><code>s</code> is equivalent to <code>ctx.shadowBlur</code>, its syntax look like: <code>s shadowBlur</code>
+                <ul>
+                    <li>Example: <code>"s 30"</code> (This creates a shadow with a 30px blur).</li>
+                </ul><br>
+            </li>
+            <li><code>t</code> is equivalent to <code>ctx.translate()</code>, its syntax look like: <code>t x y</code>
+                <ul>
+                    <li>Example: <code>"t 100 10"</code> (This moves the drawing context 100px right and 10px down).</li>
+                </ul><br>
+            </li>
+            <li><code>q</code> is equivalent to <code>ctx.rotate()</code>, its syntax look like: <code>q angle</code>
+                <ul>
+                    <li><code>angle</code> is in degrees</li>
+                    <li>Example: <code>"q 45"</code> (This rotates the drawing context by 45 degrees).</li>
+                </ul><br>
+            </li>
+            <li><code>&lt;</code> is equivalent to <code>ctx.save()</code> (This saves the current canvas state so you can return to it later).<br></li>
+            <li><code>&gt;</code> is equivalent to <code>ctx.restore()</code> (This restores the last saved canvas state).</li>
+        </ol><br><br>
+        
+        Example of full <code>svg()</code> function:<br><br>
+
+        <!-- Toggle Slider UI -->
+        <div class="toggle-container">
+            <span>Standard</span>
+            <label class="switch">
+              <input type="checkbox" id="paletteToggle">
+              <span class="slider round"></span>
+            </label>
+            <span>Dynamic Palette</span>
+        </div>
+        
+        <!-- Color Pickers (Hidden by Default) -->
+        <div id="palette-pickers">
+            <input type="color" id="color0" value="#ffffff" title="Color $0">
+            <input type="color" id="color1" value="#6f4e37" title="Color $1">
+            <input type="color" id="color2" value="#000000" title="Color $2">
+            <input type="color" id="color3" value="#0f0f0f" title="Color $3">
+        </div>
+
+        <code id='example-code' style="white-space: pre-wrap;"></code><br>
+        <canvas id="c"></canvas><br>
+        <p style="text-align: center;">158 bytes gzipped (210 bytes uncompressed)</p>
+    </p>
+</div>
 
 <script>
-    let c = document.getElementById("content")
-    let canvas = document.getElementById("c")
-    let ctx = canvas.getContext("2d")
+    let contentDiv = document.getElementById("content");
+    let canvas = document.getElementById("c");
+    let ctx = canvas.getContext("2d");
+    let codeDisplay = document.getElementById("example-code");
+    
+    let toggle = document.getElementById("paletteToggle");
+    let pickerContainer = document.getElementById("palette-pickers");
+    let pickers = [
+        document.getElementById("color0"),
+        document.getElementById("color1"),
+        document.getElementById("color2"),
+        document.getElementById("color3")
+    ];
 
-    function svg(t,e){for(ctx.save(),ctx.translate(e[0],e[1]),ctx.scale(e[2],e[3]),i=0;i<t.length;i++){var c=t[i],a=d(t,i);"p"==c?(c=new Path2D(a.join(" ")),"s"!=(a=a[a.length-1])[1]&&"s"!=a[0]||ctx.stroke(c),"f"==a[0]&&ctx.fill(c)):"w"==c?ctx.lineWidth=a:"g"==c?ctx.globalAlpha=a:"s"==c?ctx.shadowBlur=a*Math.abs(e[2]):"c"==c?(parseInt(a[1])&&(ctx.fillStyle=a[0]),parseInt(a[2])&&(ctx.strokeStyle=a[0]),parseInt(a[3])&&(ctx.shadowColor=a[0]),i+=a[0].length+1):"a"==c?(ctx.beginPath(),ctx.arc(a[0],a[1],a[2],a[3]*.01745,a[4]*.01745),parseInt(a[5])&&ctx.fill(),parseInt(a[6])&&ctx.stroke()):"r"==c?(ctx.beginPath(),ctx.rect(a[0],a[1],a[2],a[3]),parseInt(a[4])&&ctx.fill(),parseInt(a[5])&&ctx.stroke()):"<"==c?ctx.save():">"==c?ctx.restore():"t"==c?ctx.translate(a[0],a[1]):"q"==c&&ctx.rotate(a*.01745)}ctx.restore()}function d(t,e){return t.slice(e+2,t.indexOf(",",e+2)).split(" ")}
+    function svg(b,d,e=[]){ctx.save(),ctx.translate(d[0],d[1]),ctx.scale(d[2],d[3]);for(var c=b.split(" ");0<c.length;){var f=c[0],g=new Path2D,h="00";if("p"==f){let a=c.join(" ");g=new Path2D(a.slice(2,a.indexOf(":"))),h=(c=a.slice(a.indexOf(":")+1).trim().split(" "))[0]}else"w"==f?ctx.lineWidth=c[1]:"g"==f?ctx.globalAlpha=c[1]:"s"==f?ctx.shadowBlur=c[1]*Math.abs(d[2]):"c"==f?("$"==c[1][0]&&(c[1]=e[c[1].slice(1)]),"1"==c[2][0]&&(ctx.fillStyle=c[1]),"1"==c[2][1]&&(ctx.strokeStyle=c[1]),"1"==c[2][2]&&(ctx.shadowColor=c[1]),c.shift()):"a"==f?(g.arc(c[1],c[2],c[3],.01745*c[4],.01745*c[5]),h=c[6]):"r"==f?(g.rect(c[1],c[2],c[3],c[4]),h=c[5]):"<"==f?ctx.save():">"==f?ctx.restore():"t"==f?ctx.translate(c[1],c[2]):"q"==f&&ctx.rotate(.01745*c[1]);c.shift(),"1"==h[0]&&ctx.fill(g),"1"==h[1]&&ctx.stroke(g)}ctx.restore()}
 
     window.onresize = () => {
-        canvas.width = canvas.height = c.clientWidth*0.7
-        let s = Math.floor(canvas.width/50)
-        svg("c #fff 1, p m 1 5 l 4 30 l 14 0 l 4 -30 f,c #6f4e37 1,p m 1 11 l 2 16 l 18 0 l 2 -16 f,c #000 1, r 5 17 5 1 1,r 11 17 3 1 1,r 10 19 7 1 1, r 2 0 20 2 1,c #0f0f0f 1,r 0 2 24 3 1,", [canvas.width/2-24*s/2,canvas.height/2-35*s/2,s,s])
+        canvas.width = canvas.height = contentDiv.clientWidth * 0.7;
+        let s = Math.floor(canvas.width / 50);
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // clear previous drawing
+        
+        if (toggle.checked) {
+            // Dynamic Palette Mode
+            pickerContainer.style.display = "flex";
+            let myColors = pickers.map(p => p.value);
+            
+            codeDisplay.innerText = `// coffee cup using dynamic palette\n\nlet myColors = ["${myColors[0]}", "${myColors[1]}", "${myColors[2]}", "${myColors[3]}"];\n\nsvg("c $0 100 p m 1 5 l 4 30 l 14 0 l 4 -30 :10 c $1 100 p m 1 11 l 2 16 l 18 0 l 2 -16 :10 c $2 100 r 5 17 5 1 10 r 11 17 3 1 10 r 10 19 7 1 10 r 2 0 20 2 10 c $3 100 r 0 2 24 3 10",[10,10,5,5], myColors);`;
+            
+            svg("c $0 100 p m 1 5 l 4 30 l 14 0 l 4 -30 :10 c $1 100 p m 1 11 l 2 16 l 18 0 l 2 -16 :10 c $2 100 r 5 17 5 1 10 r 11 17 3 1 10 r 10 19 7 1 10 r 2 0 20 2 10 c $3 100 r 0 2 24 3 10", [canvas.width/2-24*s/2, canvas.height/2-35*s/2, s, s], myColors);
+        } else {
+            // Standard Mode
+            pickerContainer.style.display = "none";
+            codeDisplay.innerText = `// coffee cup standard\n\nsvg("c #fff 100 p m 1 5 l 4 30 l 14 0 l 4 -30 :10 c #6f4e37 100 p m 1 11 l 2 16 l 18 0 l 2 -16 :10 c #000 100 r 5 17 5 1 10 r 11 17 3 1 10 r 10 19 7 1 10 r 2 0 20 2 10 c #0f0f0f 100 r 0 2 24 3 10",[10,10,5,5]);`;
+            
+            svg("c #fff 100 p m 1 5 l 4 30 l 14 0 l 4 -30 :10 c #6f4e37 100 p m 1 11 l 2 16 l 18 0 l 2 -16 :10 c #000 100 r 5 17 5 1 10 r 11 17 3 1 10 r 10 19 7 1 10 r 2 0 20 2 10 c #0f0f0f 100 r 0 2 24 3 10", [canvas.width/2-24*s/2, canvas.height/2-35*s/2, s, s]);
+        }
     }
+
+    // Attach listeners
+    toggle.addEventListener('change', window.onresize);
+    pickers.forEach(picker => picker.addEventListener('input', window.onresize));
 
     setTimeout(()=>{
         window.onresize()
     },10)
 </script>
+
 <style>
     canvas{
         margin:auto;
@@ -31,7 +218,7 @@
         text-decoration: none;
     }
 
-#content{
+    #content{
         font-family: Arial, Helvetica, sans-serif;
         background: white;
         padding: 5% 5% 10% 5%;
@@ -40,55 +227,68 @@
         max-width: 800px;
         box-shadow: 0px 0px 20px #e6e8e9;
     }
-hr{
-    border: none;
-    background:#f6f8fa;
-    height: 2px;
-}
-:root {
+    
+    hr{
+        border: none;
+        background:#f6f8fa;
+        height: 2px;
+    }
+    
+    :root {
         --fontsize: 1vw;
     }
+    
     p{
         font-size: var(--fontsize);
         margin: 0;
         word-wrap: break-word;
         line-height: calc(var(--fontsize) + .3vw);
     }
+    
     h1{
         font-size: calc(var(--fontsize) * 3);
         margin: 0 0 var(--fontsize) 0;
         line-height: calc(var(--fontsize) * 3 + .3vw);
     }
+    
     h2{
         font-size: calc(var(--fontsize) * 2);
         margin: 0 0 var(--fontsize) 0;
         line-height: calc(var(--fontsize) * 2 + .3vw);
     }
+    
     h3{
         font-size: calc(var(--fontsize) * 1.5);
         margin: 0 0 var(--fontsize) 0;
         line-height: calc(var(--fontsize) * 1.5 + .3vw);
     }
+    
     b{
         font-weight: 700;
     }
+    
     li{
         margin-bottom: 1%;
     }
+    
     ul,ol{
         margin: 1% 0 0 0;
     }
+    
     li:last-child{
         margin: 0;
     }
+    
     code{
         background: #f6f8fa;
         padding: 2px;
     }
-    #code{
+    
+    #main-code, #example-code{
         display: block;
         padding:3%;
     }
+    
     blockquote{
         border-left: 5px solid #dfe2e5;
         margin:0;
@@ -96,9 +296,132 @@ hr{
         color:#6a737d;
     }
 
+    /* Table Styles */
+    table {
+        width: 70%;
+        margin: auto;
+        border-collapse: collapse;
+        margin-top: 5%;
+        margin-bottom: 5%;
+    }
+    th, td {
+        border: 1px solid #dfe2e5;
+        padding: 8px;
+        text-align: center;
+        font-size: var(--fontsize);
+    }
+
+    th {
+        background-color: #f6f8fa;
+    }
+
+    /* Slider UI Styles */
+    .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
+        font-size: calc(var(--fontsize) * 1.2);
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    
+    .switch input { 
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+    }
+    
+    input:checked + .slider {
+        background-color: #00B2EE;
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+    
+    .slider.round {
+        border-radius: 24px;
+    }
+    
+    .slider.round:before {
+        border-radius: 50%;
+    }
+
+    /* Color Picker Styles */
+    #palette-pickers {
+        display: none; /* Hidden by default */
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    input[type="color"] {
+        appearance: none;
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        height: 40px;
+        width: 40px;
+        padding: 0;
+        border-radius: 5px;
+        box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+        transition: transform 0.1s ease;
+    }
+    
+    input[type="color"]:hover {
+        transform: scale(1.1);
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+    
+    input[type="color"]::-webkit-color-swatch {
+        border: 2px solid white;
+        border-radius: 5px;
+    }
+
+    input[type="color"]::-moz-color-swatch {
+        border: 2px solid white;
+        border-radius: 5px;
+    }
+
     @media only screen and (max-width: 600px) {
         :root {
-            --fontsize: 2vw;
+            --fontsize: 2.5vw;
         }
     }
 
