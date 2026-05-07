@@ -421,220 +421,220 @@
     }
 
 
-    // class Polygon {
-    //     constructor(x,y,i){
-    //         this.i = i
+    class Polygon {
+        constructor(x,y,i){
+            this.i = i
 
-    //         this.x = x
-    //         this.y = y
+            this.x = x
+            this.y = y
 
-    //         this.t = "poly"
-    //         this.points = [{x:0,y:0,drag:false,e:false}]
-    //         this.drag = {x:null,y:null}
-    //         this.cp = true
+            this.t = "poly"
+            this.points = [{x:0,y:0,drag:false,e:false}]
+            this.drag = {x:null,y:null}
+            this.cp = true
 
-    //         this.path = ""
+            this.path = ""
 
-    //         this.fill = true
-    //         this.stroke = true
-    //         this.color = ["#000000", "#ffffff"]
-    //         this.linewidth = 1
-    //         this.opacity = 1
-    //     }
+            this.fill = true
+            this.stroke = true
+            this.color = ["#000000", "#ffffff"]
+            this.linewidth = 1
+            this.opacity = 1
+        }
 
-    //     update(){
+        update(){
 
-    //         if(cursor.state == "point" && editIndex == this.i){
+            if(cursor.state == "point" && editIndex == this.i){
 
-    //             let x = this.x
-    //             let y = this.y
+                let x = this.x
+                let y = this.y
 
-    //             for(let i = 0; i<this.points.length-1; i++){
-    //                 x+=this.points[i].x
-    //                 y+=this.points[i].y
-    //             }
+                for(let i = 0; i<this.points.length-1; i++){
+                    x+=this.points[i].x
+                    y+=this.points[i].y
+                }
 
-    //             if(this.points[this.points.length-1].e == false){
-    //                 x+=this.points[this.points.length-1].x
-    //                 y+=this.points[this.points.length-1].y
-    //                 this.points.push({x:cursor.x-x,y:cursor.y-y,drag:false,e:true})
-    //             }else{
-    //                 this.points[this.points.length-1].y = cursor.y-y
-    //                 this.points[this.points.length-1].x = cursor.x-x
-    //             }
+                if(this.points[this.points.length-1].e == false){
+                    x+=this.points[this.points.length-1].x
+                    y+=this.points[this.points.length-1].y
+                    this.points.push({x:cursor.x-x,y:cursor.y-y,drag:false,e:true})
+                }else{
+                    this.points[this.points.length-1].y = cursor.y-y
+                    this.points[this.points.length-1].x = cursor.x-x
+                }
 
-    //             if(cursor.click){
-    //                 cursor.state = ""
-    //                 this.points[this.points.length-1].e = false
-    //             }
-    //         }
+                if(cursor.click){
+                    cursor.state = ""
+                    this.points[this.points.length-1].e = false
+                }
+            }
 
-    //         if(this.drag.x != null){
-    //             let diff = Math.floor(this.drag.x[0] - cursor.x)
-    //             let index = null
+            if(this.drag.x != null){
+                let diff = Math.floor(this.drag.x[0] - cursor.x)
+                let index = null
 
-    //             if(this.drag.x[1]){
+                if(this.drag.x[1]){
 
-    //                 this.x -= diff
-    //                 updateUI()
+                    this.x -= diff
+                    updateUI()
 
-    //             }else{
+                }else{
 
-    //                 for(let i=0; i<this.points.length; i++){
-    //                     if(this.points[i].drag){
-    //                         index = i
-    //                         if(i == 0){
-    //                             this.x -= diff
-    //                         }else{
-    //                             this.points[i].x -= diff
-    //                         }
-    //                     }else if(index != null && index + 1 == i){
-    //                         this.points[i].x += diff
-    //                     }
-    //                 }
-    //             }   
+                    for(let i=0; i<this.points.length; i++){
+                        if(this.points[i].drag){
+                            index = i
+                            if(i == 0){
+                                this.x -= diff
+                            }else{
+                                this.points[i].x -= diff
+                            }
+                        }else if(index != null && index + 1 == i){
+                            this.points[i].x += diff
+                        }
+                    }
+                }   
 
-    //             if(!cursor.click){
-    //                 this.drag.x = null
-    //                 if(index != null){
-    //                     this.points[index].drag = false
-    //                 }
-    //             }else{
-    //                 this.drag.x[0] = cursor.x
-    //                 updateUI()
-    //             }
-    //         }
+                if(!cursor.click){
+                    this.drag.x = null
+                    if(index != null){
+                        this.points[index].drag = false
+                    }
+                }else{
+                    this.drag.x[0] = cursor.x
+                    updateUI()
+                }
+            }
 
-    //         if(this.drag.y != null){
-    //             let diff = Math.floor(this.drag.y[0] - cursor.y)
-    //             let index = null
+            if(this.drag.y != null){
+                let diff = Math.floor(this.drag.y[0] - cursor.y)
+                let index = null
 
-    //             if(this.drag.y[1]){
+                if(this.drag.y[1]){
 
-    //                 this.y -= diff
-    //                 updateUI()
+                    this.y -= diff
+                    updateUI()
 
-    //             }else{
+                }else{
                 
-    //                 for(let i=0; i<this.points.length; i++){
-    //                     if(this.points[i].drag){
-    //                         index = i
-    //                         if(i == 0){
-    //                             this.y -= diff
-    //                         }else{
-    //                             this.points[i].y -= diff
-    //                         }
-    //                     }else if(index != null && index + 1 == i){
-    //                         this.points[i].y += diff
-    //                     }
-    //                 }
-    //             }
+                    for(let i=0; i<this.points.length; i++){
+                        if(this.points[i].drag){
+                            index = i
+                            if(i == 0){
+                                this.y -= diff
+                            }else{
+                                this.points[i].y -= diff
+                            }
+                        }else if(index != null && index + 1 == i){
+                            this.points[i].y += diff
+                        }
+                    }
+                }
 
-    //             if(!cursor.click){
-    //                 this.drag.y = null
-    //                 if(index != null){
-    //                     this.points[index].drag = false
-    //                 }
-    //             }else{
-    //                 this.drag.y[0] = cursor.y
-    //                 updateUI()
-    //             }
-    //         }
+                if(!cursor.click){
+                    this.drag.y = null
+                    if(index != null){
+                        this.points[index].drag = false
+                    }
+                }else{
+                    this.drag.y[0] = cursor.y
+                    updateUI()
+                }
+            }
 
-    //         if(cursor.click && this.drag.x == null && this.drag.y == null){
+            if(cursor.click && this.drag.x == null && this.drag.y == null){
 
-    //             let x = this.x
-    //             let y = this.y
+                let x = this.x
+                let y = this.y
 
-    //             for(let i=0; i<this.points.length; i++){
-    //                 x += this.points[i].x
-    //                 y += this.points[i].y
-    //                 if(cursor.x > x-5 && cursor.x < x+5 && cursor.y > y-5 && cursor.y < y+5){
-    //                     this.points[i].drag = true
-    //                     break;
-    //                 }
-    //             }
-    //         }
+                for(let i=0; i<this.points.length; i++){
+                    x += this.points[i].x
+                    y += this.points[i].y
+                    if(cursor.x > x-5 && cursor.x < x+5 && cursor.y > y-5 && cursor.y < y+5){
+                        this.points[i].drag = true
+                        break;
+                    }
+                }
+            }
             
 
-    //         if(this.drag.x == null && this.drag.y == null){
-    //             for(let i=0; i<this.points.length; i++){
-    //                 if(this.points[i].drag){
-    //                     this.drag.x = [cursor.x,0]
-    //                     this.drag.y = [cursor.y,0]
-    //                     break
-    //                 }
-    //             }
-    //         }
+            if(this.drag.x == null && this.drag.y == null){
+                for(let i=0; i<this.points.length; i++){
+                    if(this.points[i].drag){
+                        this.drag.x = [cursor.x,0]
+                        this.drag.y = [cursor.y,0]
+                        break
+                    }
+                }
+            }
 
 
-    //         let x = this.x
-    //         let y = this.y
-    //         let points = []
+            let x = this.x
+            let y = this.y
+            let points = []
 
-    //         for(let i = 0; i<this.points.length; i++){
-    //             x+=this.points[i].x
-    //             y+=this.points[i].y
-    //             points.push({x:x,y:y})
-    //         }
+            for(let i = 0; i<this.points.length; i++){
+                x+=this.points[i].x
+                y+=this.points[i].y
+                points.push({x:x,y:y})
+            }
 
-    //         if(this.drag.x == null && this.drag.y == null){
-    //             if(polyPoint(points,cursor.x,cursor.y) && cursor.click){
-    //                 this.drag.x = [cursor.x,1]
-    //                 this.drag.y = [cursor.y,1]
-    //             }
-    //         }
+            if(this.drag.x == null && this.drag.y == null){
+                if(polyPoint(points,cursor.x,cursor.y) && cursor.click){
+                    this.drag.x = [cursor.x,1]
+                    this.drag.y = [cursor.y,1]
+                }
+            }
 
-    //         if(cursor.click){
-    //             if(polyPoint(points,cursor.x,cursor.y)){
-    //                 console.log("test")
-    //                 if(editIndex == null){
-    //                     editIndex = this.i
-    //                     updateUI()
+            if(cursor.click){
+                if(polyPoint(points,cursor.x,cursor.y)){
+                    console.log("test")
+                    if(editIndex == null){
+                        editIndex = this.i
+                        updateUI()
                         
-    //                 }
-    //             }else if(editIndex == this.i && this.drag.x == null){
-    //                 editIndex = null
-    //                 updateUI()
-    //             }
-    //         }
+                    }
+                }else if(editIndex == this.i && this.drag.x == null){
+                    editIndex = null
+                    updateUI()
+                }
+            }
 
-    //         if(editIndex != this.i){
-    //             this.drag.x = null
-    //             this.drag.y = null
-    //             return
-    //         }
-    //     }
+            if(editIndex != this.i){
+                this.drag.x = null
+                this.drag.y = null
+                return
+            }
+        }
 
-    //     draw(){
-    //         ctx.globalAlpha = this.opacity
-    //         ctx.lineWidth = this.linewidth
+        draw(){
+            ctx.globalAlpha = this.opacity
+            ctx.lineWidth = this.linewidth
 
-    //         let path = "m "+this.x+" "+this.y
+            let path = "m "+this.x+" "+this.y
 
-    //         for(let i = 0; i < this.points.length; i++){
-    //             path += " l "+(this.points[i].x)+" "+(this.points[i].y)
-    //         }
+            for(let i = 0; i < this.points.length; i++){
+                path += " l "+(this.points[i].x)+" "+(this.points[i].y)
+            }
 
-    //         if(this.cp){
-    //             path += " Z"
-    //         }
+            if(this.cp){
+                path += " Z"
+            }
 
-    //         let poly = new Path2D(this.path)
+            let poly = new Path2D(this.path)
 
-    //         if(this.fill){
-    //             ctx.fillStyle = this.color[1]
-    //             ctx.fill(poly)
-    //         }
+            if(this.fill){
+                ctx.fillStyle = this.color[1]
+                ctx.fill(poly)
+            }
 
-    //         if(this.stroke){
-    //             ctx.strokeStyle = this.color[0]
-    //             ctx.stroke(poly)
-    //         }
+            if(this.stroke){
+                ctx.strokeStyle = this.color[0]
+                ctx.stroke(poly)
+            }
 
-    //         ctx.globalAlpha = 1
-    //     }
-    // }
+            ctx.globalAlpha = 1
+        }
+    }
 
 
     class Circle {

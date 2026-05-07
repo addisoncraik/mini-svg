@@ -1,422 +1,515 @@
-<canvas id="canvas"></canvas>
-<style>
-    #canvas{
-    position:absolute;
-    top:0;
-    left:0;
-    background: #303030;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini-SVG Editor</title>
+    <style>
+        body {
+            background: #f0f2f5;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-body{
-    background: white;
-}
+        #content {
+            flex-grow: 1;
+            position: relative;
+            background: #e4e6eb;
+        }
 
-#control-panel{
-    position:absolute;
-    left:70%;
-    top:0;
-    padding: 2%;
-    font-family: sans-serif;
-}
+        #canvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            background: repeating-conic-gradient(#cfd2d6 0% 25%, #ffffff 0% 50%) 50% / 20px 20px;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
 
-button{
-    border:none;
-    text-transform: uppercase;
-}
-#buttons button{
-    background-color: thistle;
-    margin: 2px;
-    border:1px solid black;
-}
-#buttons button.active{
-    background: coral;
-}
+        /* Modern Control Panel */
+        #control-panel {
+            width: 30%;
+            background: #ffffff;
+            padding: 24px;
+            box-sizing: border-box;
+            border-left: 1px solid #dcdde1;
+            box-shadow: -2px 0 15px rgba(0, 0, 0, 0.03);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-textarea{
-    width: 100%;
-    height: 20vh;
-    resize: none;
-    outline: none;
-}
+        #control-panel::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for clean look */
+        }
 
-a{
-    position: absolute;
-    bottom: -100;
-    left: 50%;
-    transform: translateX(-50%);
-    color: tomato;
-    text-transform: uppercase;
-}
+        /* Inputs & Textareas */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
 
-</style>
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b4f56;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        textarea, input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: monospace;
+            font-size: 14px;
+            background: #f8f9fa;
+            transition: all 0.2s ease;
+        }
+
+        textarea {
+            height: 140px;
+            resize: vertical;
+        }
+
+        textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #00B2EE;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(0, 178, 238, 0.15);
+        }
+
+        /* Flex Layouts */
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        
+        .row > div {
+            flex: 1;
+        }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        /* Toggle Switches */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #adb5bd;
+            transition: .3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: #00B2EE; }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; margin-top: 8px;}
+        
+        button {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            background: #ffffff;
+            color: #4b4f56;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        button:hover { background: #f8f9fa; border-color: #adb5bd; }
+
+        .primary-btn { background: #00B2EE; color: white; border: none; }
+        .primary-btn:hover { background: #009acc; }
+
+        /* Palette Management */
+        #palette-container {
+            background: #f1f3f5;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 0px;
+            background: #ffffff;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .color-row span {
+            font-family: monospace;
+            font-weight: bold;
+            color: #6c757d;
+            width: 24px;
+            text-align: center;
+        }
+
+        input[type="color"] {
+            appearance: none;
+            -webkit-appearance: none;
+            border: none;
+            background: none;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            cursor: pointer;
+            flex-grow: 1;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border-radius: 4px; border: 1px solid #ced4da; }
+
+        .icon-btn {
+            flex: 0 0 auto;
+            padding: 4px 8px;
+            background: #f8f9fa;
+            border: 1px solid #ced4da;
+            color: #4b4f56;
+        }
+
+        hr { border: none; border-top: 1px solid #e9ecef; width: 100%; margin: 10px 0; }
+
+        .doc-link {
+            text-align: center;
+            color: #00B2EE;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: block;
+            margin-top: 10px;
+        }
+        .doc-link:hover { text-decoration: underline; }
+
+    </style>
+</head>
+<body>
+
+<div id="content">
+    <canvas id="canvas"></canvas>
+</div>
 
 <div id="control-panel">
-    Asset Data:<br><br><textarea id="data" onclick="noActive()"></textarea><br><br>
-    Spin: <input type="checkbox" onchange="spin = this.checked">
-    | Scale: <input type="checkbox" onchange="scale = this.checked" checked>
-    | Bounding Boxes: <input type="checkbox" onchange="boundingBoxes = this.checked" checked><br><br>
-    Title: <input id="title" type="text" onchange="title = this.value"><br>
-    Width: <input id="w" type="number" min="0" max="500" onchange="currentAsset.w = parseInt(this.value)"><br>
-    Height: <input id="h" type="number" min="0" max="500" onchange="currentAsset.h = parseInt(this.value)"><br><br>
-    <button onclick="save()">Save</button>
-    <button onclick="exportAsset()">Export</button>
-    <button onclick="deleteAsset()">Delete</button><br><br>
-    <hr>
-    <div id="buttons">
-
-    </div>
-    <a href="https://craiky.github.io/mini-svg/">documentation</a>
-</div>
-
-<div id="documentation">
     
+    <div class="input-group">
+        <label>Asset Data</label>
+        <textarea id="data"></textarea>
+    </div>
+    
+    <div class="toggle-row">
+        <label style="margin:0;">Scale Canvas</label>
+        <label class="switch">
+            <input type="checkbox" onchange="scale = this.checked" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="toggle-row">
+        <label style="margin:0;">Use Palette</label>
+        <label class="switch">
+            <input id="paletteToggle" type="checkbox" onchange="togglePalette(this.checked)">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div id="palette-container" style="display: none;">
+        <div class="input-group">
+            <label>Palette Colors</label>
+            <div id="color-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            <button onclick="addColor()" style="width: 100%; padding: 6px; margin-top: 5px;">+ Add Color</button>
+        </div>
+
+        <div class="input-group" style="margin-top: 20px;">
+            <label>Palette Array</label>
+            <textarea id="palette-data" rows="3" style="height: auto;"></textarea>
+        </div>
+    </div>
+    
+    <div class="input-group">
+        <label>Title</label>
+        <input id="title" type="text" onchange="assetTitle = this.value">
+    </div>
+    
+    <div class="row">
+        <div class="input-group">
+            <label>Width</label>
+            <input id="w" type="number" min="0" max="500">
+        </div>
+        <div class="input-group">
+            <label>Height</label>
+            <input id="h" type="number" min="0" max="500">
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="primary-btn" onclick="save()">Save</button>
+        <button onclick="clearAll()">Clear</button>
+    </div>
+    
+    <hr>
+
+    <a class="doc-link" href="https://addisoncraik.github.io/mini-svg/" target="_blank">Documentation</a>
+
+    <div class="btn-group" style="position: absolute; bottom:20px; left: 71%; right: 1%;">
+        <button onclick="mini_export()">Export</button>
+        <button onclick="mini_import()">Import</button>
+    </div>
 </div>
-
 <script>
-/////////////////////////////////////////////////////////////////
-///////////////////Declare Global Variables//////////////////////
-/////////////////////////////////////////////////////////////////
+    // Global Variables
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext('2d');
 
-//declare canvas
-var canvas = document.getElementById("canvas");
-var ctx = canvas.getContext('2d');
-
-let angle = 0;
-let spin = 0;
-let scale = 1;
-let boundingBoxes = 1;
-let editor = document.getElementById("data")
-let h = document.getElementById("h")
-let w = document.getElementById("w")
-let title = document.getElementById("title")
-
-var assets=[{svg:"c red 1 0 1, s 10, g 0.8, r 0 0 5 125 1, s 0, c silver 1, r -1 125 7 35 1, c black 1, r -1 125 7 4 1, r -1 133 7 7 1, r -1 142 7 16 1,",title:"lightsaber",w:5,h:160},{svg:"w 6, c #1b88f5 1 1, p m 57 2.5 l 57 32.5 0 1, p m 23 2.5 l 23 32.5 0 1, c #000 1 1, p m 10 0 l 10 -27 l 70 -27 l 70 0 m 10 0 l 10 1 0 1, r 0 0 20 35 1, r 60 0 20 35 1,",title:"headphones",w:80,h:8},{svg:"c silver 1, r 0 2 65 35 1, <c black 1, r 62 0 40 10 1, c white 0 1, r 1 35 63 1 0 1,> a 71 5 3 0 360 1, a 83.5 5 3 0 360 1, a 95 5 3 0 360 1,",
-title:"cleaver",w:102,h:40},{svg:"c #c7372f 1, r 0 15 40 40 1, c #ffb8b8 1, r 27.5 25 5 7 1, < q 15, c #964B00 1, r 22 0 4 15 1, c lightgreen 1, r 26 2 10 4 1, r 14 8 8 3 1,>",title:"apple",dmg:5,w:40,h:65},{svg:"c white 0 0 1, s 30, r 2 0 10 120 1, s 0, c #0f0f0f 1, p m 12 105 l 82 100 l 82 110 l 12 115 1, r 70 110 7 3 1, c black 0 0 1, c #171717 1, p m 80 25 l 110 30 l 110 80 l 90 90 l 90 105 l 20 115 l 20 118 l 10 119 l 10 30 1, < w .5, c black 0 1, p m 18 100 l 85 93 0 1, p m 18 105 l 85 96.5 0 1, p m 18 110 l 85 100 0 1,> s 30, p m 10 1 l 20 3 l 20 7 l 80 25 l 80 90 l 10 100 1, s 0, c #000 1, g 0.19, r 30 30 30 6 1, g 0.2, p m 30 36 l 60 36 l 30 50 1, g 1, c #535d61 1, r 0 0 12 120 1,",
-title:"crt tv",w:110,h:120},{svg:"c #fff 1, p m 1 5 l 4 35 l 20 35 l 23 5 1, c black 1, r 2 0 20 2 1, c #0f0f0f 1, r 0 2 24 3 1, c #6f4e37 1, p m 1 11 l 2.5 27 l 21.5 27 l 23 11 1, c #000 1, r 5 17 5 1 1, r 11 17 3 1 1, r 10 19 7 1 1,",title:"coffee",w:24,h:35},{svg:"w 4, c #542d2d 1, r 30 0 30 10 1, c #693d3d 1, r 55 3 20 10 1, r c #666 1 1, p m 0 6 l 100 6 l 87.5 21 l 12.5 21 1, c silver 1 1, p m 100 8 l 150 3 l 152.5 8 l 91 15.5 1, p m 11 11 l 15.5 16 0 1,",title:"frying pan",w:152.5,h:30},{svg:"c silver 1, r 6 3 38 40 1, c gray 1, r 0 12 7 3 1, r 43 12 7 3 1, r 4 0 42 4 1, c #fff 1, g 0.2, r 35 7 3 30 1,",
-title:"cooking pot",w:50,h:43},{svg:"w 3, c white 1, r 0 20 30 30 1, c silver 0 1, p m 10 20 l 6 12.5 m 20 20 l 24 12.5 m 12.5 20 0 1, c gold 1 1, r 0 20 30 30 0 1, p m 12.5 50 l 0 57.5 m 17.5 50 l 30 57.5 m 12.5 50 0 1, p m 2.5 14 l 12 10 l 9 6 l 0 9 1, p m 27.5 14 l 18 10 l 21 6 l 30 9 1, c black 1, <t 15 35, q "+RandomRange(0,360,1)+", r 0 0 1 12.5 1,> <t 15 35, q "+RandomRange(0,360,1)+", r 0 0 10 1 1,> <t 15 35, q "+RandomRange(0,360,1)+", r 0 0 1 -5 1,>",title:"clock",w:30,h:51.5},{svg:"c grey 1, r 22.5 25 5 28.5 1, c #9bb2ba 1 1, r 17.5 53.5 15 10 1, r 15.5 92 19 5 1, c #AEC6CF 1, r 10.5 60 30 32.5 1, c yellow 0 0 1, s 30, g 0.8, c white 1 1, p m 0 45 l 50 45 l 40 0 l 10 0 1,",
-title:"lamp",w:50,h:97},{svg:"w 3, c silver 1 1, p m 0 0 l 0 12.5 l 5 12.5 l 5 0 l 5 12.5 l 10 12.5 l 10 0 m 0 0 l 0 0 0 1, r 3 12.5 4 25 1,",title:"fork",w:10,h:37.5},{svg:"c silver 1, r 0 0 15 20 1, r 5.5 20 4 35 1,",title:"spoon",w:15,h:55},{svg:"c grey 1, r 6.5 37 7 3.5 1, c silver 1, r 5 25 10 12.5 1, g 0.8, c yellow 0 0 1, c yellow 1, s 30, r 0 0 20 25 1,",title:"light bulb",w:20,h:40.5},{svg:"c red 1, r 0 5 12.5 70 1, r 12 5 10 15 1, r 12 60 10 15 1,c darkred 1, r 22 1 10 22.5 1, r 22 56 10 22.5 1,",
-title:"telephone",w:44.5,h:79.5},{svg:"c #000 1,g 0.1,r 0 47.8 21 8.2 1,g 1,c #51fe0e 0 0 1,s 10,c #ffc001 1, c #666 0 1,w 2,r 9 12 9.6 18 0 1,r 9 16.8 12 15 1,r 4.8 18 12 24 1,r 1.5 6 15 18 1,c #fff 1,r 1.5 13 8.6 8.8 1,c #3b3d3b 1,r 1.5 13.8 7.8 7.2 1, s 4,c #666 1,<t 10.5 25, r -2.5 6 6 6 1,><t 10.5 40,r -7.5 7.5 6 3 1,><t 10.5 40,r 1.5 7.5 6 3 1,>",title:"character",w:21,h:54},{svg:"c #000 1, g 0.1, r 0 46 21 8 1, g 1, c #B96493 1, r 4.8 18 12 24 1, c #9B4674 1, r 4.4 35 12.8 10 1, c #a1665e 1, r 4 8 14 14 1, c #fff 1, r 5.5 13.2 4 4 1, c #000 1, r 6.5 14.2 2 2 1, c #241c11 1, r 3 7 14.4 5 1, r 14 7 5 18 1, c #a1665e 1, < t 10.5 25, r -2.5 6 6 6 1, >< t 10.5 40, r -7.5 7.5 6 3 1, >< t 10.5 40, r 1.5 7.5 6 3 1, >",
-title:"NPC1",w:21,h:54},{svg:"c #000 1, g 0.1, r 0 46 21 8 1, g 1, c #BC5F04 1, r 4.8 18 12 24 1, c #1b306b 1, r 4.4 35 12.8 10 1, c tan 1, r 4 8 14 14 1, c #fff 1, r 5.5 13.2 4 4 1, c #000 1, r 6.5 14.2 2 2 1, c #4f1a00 1, r 3 7 14.4 5 1, r 14 7 5 8 1, c tan 1, < t 10.5 25, r -2.5 6 6 6 1, >< t 10.5 40, r -7.5 7.5 6 3 1, >< t 10.5 40, r 1.5 7.5 6 3 1, >",title:"NPC2",w:21,h:54}];
+    let scale = true;
+    let colorPaletteActive = false;
+    let editor = document.getElementById("data");
+    let h = document.getElementById("h");
+    let w = document.getElementById("w");
+    let titleInput = document.getElementById("title");
+    
+    let customColors = [];
+    let assetTitle = "";
 
 
-/////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////
+    mini_export = () => {
+        let assetData = {
+            t: titleInput.value,
+            w: w.value,
+            h: h.value,
+            d: editor.value,
+        };
 
+        if (colorPaletteActive) assetData.palette = customColors
 
+        let dataStr = JSON.stringify(assetData);
+        navigator.clipboard.writeText(dataStr).then(() => {
+            alert("Asset data copied to clipboard!");
+        }).catch(err => {
+            alert("Failed to copy asset data: " + err);
+        });
+    };
 
+    mini_import = () => {
+        dataStr = prompt("Paste your asset JSON data here:")
 
+        if (!dataStr) return;
 
-//resize the canvas
-window.onresize = () => {
-  canvas.width = window.innerWidth*0.7;
-  canvas.height = window.innerHeight;
-}
+        try {
+            let assetData = JSON.parse(dataStr);
+            titleInput.value = assetData.t || "";
+            w.value = assetData.w;
+            h.value = assetData.h;
+            editor.value = assetData.d;
+            customColors = [];
 
-function RandomRange(min=0, max=1, f = 0) {
-  r = Math.random() * (max - min) + min
-  return f ? Math.floor(r) : r
-}
-
-function noActive(){
-    for(let j =0; j<assets.length; j++){
-        buttons.children[j].className = ""
-    }
-}
-
-function draw(){
-    angle+=5;
-    canvas.width ^=0
-    drawAsset(JSON.parse(editor.value))
-}
-
-function drawAsset(data){
-    let s = scale ? (canvas.width/2/(currentAsset.w > currentAsset.h ? currentAsset.w : currentAsset.h)) : 1
-    ctx.save()
-    ctx.translate(canvas.width/2,canvas.height/2)
-    ctx.strokeStyle = "red"
-    if(spin)ctx.rotate(angle*Math.PI/180)
-    svg(data,[-currentAsset.w/2*s,-currentAsset.h/2*s,s,s],["red","silver","black"])
-    if(boundingBoxes)ctx.strokeRect(-currentAsset.w/2*s,-currentAsset.h/2*s,currentAsset.w*s,currentAsset.h*s)
-    ctx.restore()
-}
-
-function spawnButtons(){
-    for(let i = 0; i<assets.length;i++){
-        let buttons = document.getElementById("buttons")
-
-        let button =  document.createElement("button")
-        button.innerHTML = assets[i].title
-        button.setAttribute('onclick',`switchAsset(${i})` )
-
-        buttons.appendChild(button)
-    }
-}
-
-function switchAsset(i){
-    editor.value = JSON.stringify(assets[i].svg)
-    currentAsset = assets[i]
-    h.value = currentAsset.h
-    w.value = currentAsset.w
-    noActive()
-    buttons.children[i].className = "active"
-    title.value = currentAsset.title;
-}
-
-function save() {
-    let newAsset = {
-        svg:JSON.parse(editor.value),
-        w:currentAsset.w,
-        h:currentAsset.h,
-        title:title.value
-    }
-    console.log(newAsset)
-    assets.push(newAsset)
-    buttons.innerHTML = ""
-    spawnButtons()
-    switchAsset(assets.length-1)
-}
-
-function exportAsset() {
-    let asset = {
-        svg:JSON.parse(editor.value),
-        w:currentAsset.w,
-        h:currentAsset.h,
-    }
-    let t = title.value
-    alert("Artwork SVG code: \n\n"+JSON.stringify(asset)+" //"+t)
-}
-
-function deleteAsset(){
-    for(let j =0; j<assets.length; j++){
-        if(buttons.children[j].className == "active"){
-            buttons.innerHTML = ""
-            assets.splice(j,1)
-            spawnButtons()
-            break;
+            if (assetData.palette) customColors = assetData.palette;
+            
+            if (customColors.length > 0) {
+                document.getElementById('paletteToggle').checked = true;
+                togglePalette(true);
+                renderColors();
+            } else {
+                document.getElementById('paletteToggle').checked = false;
+                togglePalette(false);
+            }
+        } catch (e) {
+            alert("Invalid JSON data: " + e);
         }
+    };
+
+
+    // Toggle Palette UI
+    function togglePalette(isChecked) {
+        colorPaletteActive = isChecked;
+        document.getElementById('palette-container').style.display = isChecked ? 'block' : 'none';
     }
-}
 
+    function syncPaletteTextarea() {
+        let paletteInput = document.getElementById("palette-data");
+        paletteInput.value = JSON.stringify(customColors).replace(/,/g, ', ');
+    }
 
-function loop(){
-    draw()
-    window.requestAnimationFrame(loop)
-}
+    // Two-Way Binding: Textarea to State
+    document.getElementById("palette-data").addEventListener('input', function() {
+        try {
+            let parsed = JSON.parse(this.value);
+            if (Array.isArray(parsed)) {
+                customColors = parsed;
+                renderColors(false); // Render UI without overwriting the textarea while user types
+            }
+        } catch (e) {
+            // Fails silently if JSON is incomplete/invalid while typing
+        }
+    });
 
-//"c #fff 1, p m 1 5 l 4 30 l 14 0 l 4 -30 f,c black 1,r 2 0 20 2 1,c #0f0f0f 1,r 0 2 24 3 1,c #6f4e37 1,p m 1 11 l 2 16 l 18 0 l 2 -16 f,c #000 1,r 5 17 5 1 1,r 11 17 3 1 1,r 10 19 7 1 1,"
+    // Render Color List with Up/Down Arrows
+    function renderColors(updateTextarea = true) {
+        let list = document.getElementById("color-list");
+        list.innerHTML = "";
+        customColors.forEach((color, index) => {
+            let row = document.createElement("div");
+            row.className = "color-row";
+            
+            // Disable up arrow for first item, down arrow for last item
+            let upDisabled = index === 0 ? "disabled" : "";
+            let downDisabled = index === customColors.length - 1 ? "disabled" : "";
 
-/////svg stuff/////
+            row.innerHTML = `
+                <span>$${index}</span>
+                <input type="color" value="${color}" oninput="updateColor(${index}, this.value)">
+                <button class="icon-btn del-btn" onclick="removeColor(${index})">X</button>
+            `;
+            list.appendChild(row);
+        });
 
-//svg like function
-// function svg(data, info = [0,0,1,1]){
-//   ctx.save()
-//   ctx.translate(info[0],info[1])
-//   ctx.scale(info[2],info[3])
+        if(updateTextarea) syncPaletteTextarea();
+    }
 
-//   for(i=0; i < data.length; i++){
-//     let char = data.charAt(i);
-//       if(char == "p"){
-//           // p m x y or l x y, filled stroke,
-//           ctx.beginPath()
-//           let p = interpetData(data,i);
-//           /* let p = new Path2D(d)
-//           let c = [d.charAt(d.length-1),d.charAt(d.length-2)]
-//           if(c[0] == "1")ctx.fill(p)
-//           if(c[1] == "1")ctx.stroke(p) */
+    function addColor() {
+        customColors.push("#ffffff");
+        renderColors();
+    }
 
-//            for(let j =0; j<p.length; j++){
-//               if(p[j] == "m"){ctx.moveTo(p[j+1],p[j+2]);j+=2}
-//               else if(p[j] == "l"){ctx.lineTo(p[j+1],p[j+2]);j+=2}
-//               else{
-//                   ctx.closePath()
-//                   if(parseInt(p[j]))ctx.fill()
-//                   if(parseInt(p[j+1]))ctx.stroke()
-//                   break;
-//               } 
-              
-//           }
+    function updateColor(index, val) {
+        customColors[index] = val;
+        syncPaletteTextarea();
+    }
 
-//           ///CANNOT USE L OR M IN SVG FROM NOW ON
-//       }else if(char == "w"){
-//           //stroke width
-//           //w stroke-width,
+    function removeColor(index) {
+        customColors.splice(index, 1);
+        renderColors();
+    }
 
-//           ctx.lineWidth = interpetData(data, i)[0]
+    // Engine drawing
+    function drawAsset(data){
+        // Adjust for the 320px panel width
+        let vs = scale ? window.innerHeight * 0.8 / parseInt(h.value) : 1;
+        let hs = scale ? window.innerWidth * 0.6 / parseInt(w.value) : 1;
+        let s = vs < hs ? vs : hs;
 
-//       }else if(char == "g"){
-//           //global alpha
-//           //g alpha,
-          
-//           ctx.globalAlpha = interpetData(data, i)[0]
+        canvas.width = parseInt(w.value) * s;
+        canvas.height = parseInt(h.value) * s;
 
-//       }else if(char == "s"){
-//           //shadow blur
-//           //s blur,
+        if(editor.value) svg(data, [0, 0, s, s], colorPaletteActive ? customColors : []);
+    }
 
-//           ctx.shadowBlur = interpetData(data, i)[0]*Math.abs(info[2])
+    function save() {
+        let newAsset = {
+            svg: editor.value,
+            w: parseInt(w.value),
+            h: parseInt(h.value),
+            title: titleInput.value,
+            palette: colorPaletteActive ? customColors : [],
+        };
 
-//       }else if(char == "c"){
-//           //color
-//           //c #000000 fill stroke shadow,
-//           let c = interpetData(data, i)
+        localStorage.setItem("mini_svg_current_edit", JSON.stringify(newAsset));
+        console.log("Saved:", newAsset);
+    }
 
-//           for(let j =1; j<c.length; j++){
-//               c[j] = parseInt(c[j])
-//           }
+    function clearAll(){
+        let newAsset = {
+            svg: "",
+            w: 100,
+            h: 100,
+            title: "",
+            palette: [],
+        };
 
-//           if(c[1])ctx.fillStyle = c[0]
-//           if(c[2])ctx.strokeStyle = c[0]
-//           if(c[3])ctx.shadowColor = c[0]
+        localStorage.setItem("mini_svg_current_edit", JSON.stringify(newAsset));
 
-//           i+=c[0].length + 1
-
-//       }else if(char == "a"){
-//           //arc
-//           //a x y radius start-angle-degrees end-angle-degrees fill stroke,
-//           let a = interpetData(data,i)
-
-//           ctx.beginPath()
-//           ctx.arc(a[0],a[1],a[2],a[3]*Math.PI/180,a[4]*Math.PI/180)
-
-//           if(parseInt(a[5]))ctx.fill()
-//           if(parseInt(a[6]))ctx.stroke()
-
-//       }else if(char == "r"){
-//           //rect
-//           //r x y w h fill stroke,
-//           let r = interpetData(data, i)
-
-//           ctx.beginPath()
-//           ctx.rect(r[0],r[1],r[2],r[3])
-
-//           if(parseInt(r[4]))ctx.fill()
-//           if(parseInt(r[5]))ctx.stroke()
-//       }else if(char == "<"){
-//           ctx.save()
-//       }else if(char == ">"){
-//           ctx.restore()
-//       }else if(char == "t"){
-//           //translate
-//           //x y,
-//           let t = interpetData(data, i)
-//           ctx.translate(t[0],t[1])
-//       }else if(data.charAt(i) == "q"){
-//           //rotate
-//           //angle,
-//           ctx.rotate(interpetData(data, i) * Math.PI / 180)
-//       }
-//   }
-//   ctx.restore()
-// }
-
-
-// //interpets svg data
-// function interpetData(d,i){
-//       return d.slice(i+2,d.indexOf(",",i+2)).split(" ");
-// }
-
-
-
-/**
- * Main SVG-like drawing function
- * @param {string} t - The instruction data string (e.g., "c red 1, r 0 0 10 10 1 0,")
- * @param {Array} e - Transformation array [xPos, yPos, xScale, yScale]
- * @param {Array} colors - Optional color pallet (e.g., ["#ff0000", "#00ff00"])
- */
-// function svg(t, e, colors = []) {
-//   // Save current context and apply initial transformations
-//   ctx.save();
-//   ctx.translate(e[0], e[1]);
-//   ctx.scale(e[2], e[3]);
-
-//   var a = t.split(" "); // Split the instruction string into parts
-
-//   // Iterate through the instruction string character by character
-//   while (a.length > 0) {
-//     var c = a[0]; // Current command character
-//     var path = new Path2D(); // Initialize a new path for potential path commands
-//     var fill_stroke = "00";
-//     //var a = t.slice(i + 2, t.length-1).split(" "); // Parse the arguments for this command
-
-//     if (c == "p") {
+        titleInput.value = "";
+        h.value = 100;
+        w.value = 100;
+        editor.value = "";
+        customColors = [];
         
-//         let i = a.join(" ")
-//         path = new Path2D(i.slice(2, i.indexOf(":")));
-//         a = i.slice(i.indexOf(":") + 1).trim().split(" ");
-//         fill_stroke = a[0];
+        document.getElementById('paletteToggle').checked = false;
+        togglePalette(false);
+        renderColors();
+    }
 
-//     } else if (c == "w") {
-//       // Line Width
-//       ctx.lineWidth = a[1];
-
-//     } else if (c == "g") {
-//       // Global Alpha (Transparency)
-//       ctx.globalAlpha = a[1];
-
-//     } else if (c == "s") {
-//       // Shadow Blur (scaled based on the X scale of the drawing)
-//       ctx.shadowBlur = a[1] * Math.abs(e[2]);
-
-//     } else if (c == "c") {
-//       // Color Command: [color, fillBool, strokeBool, shadowBool]
-//       if (a[1][0] == "$") a[1] = colors[a[1].slice(1)]; // If the color starts with $, treat it as a variable
-//       if (a[2][0] == "1") ctx.fillStyle = a[1];
-//       if (a[2][1] == "1") ctx.strokeStyle = a[1];
-//       if (a[2][2] == "1") ctx.shadowColor = a[1];
-//       // Skip the index forward past the color string length
-//       a.shift();
-
-//     } else if (c == "a") {
-//       // Arc Command: [x, y, radius, startAngle, endAngle, fill, stroke]
-//       path.arc(a[1], a[2], a[3], a[4] * 0.01745, a[5] * 0.01745);
-//       fill_stroke = a[6];
-
-//     } else if (c == "r") {
-//       // Rect Command: [x, y, width, height, fill, stroke]
-//       path.rect(a[1], a[2], a[3], a[4]);
-//       fill_stroke = a[5];
-
-//     } else if (c == "<") {
-//       // Save state
-//       ctx.save();
-
-//     } else if (c == ">") {
-//       // Restore state
-//       ctx.restore();
-
-//     } else if (c == "t") {
-//       // Translate
-//       ctx.translate(a[1], a[2]);
-
-//     } else if (c == "q") {
-//       // Rotate (converts degrees to radians)
-//       ctx.rotate(a[1] * 0.01745);
-//     }
-
-//     a.shift();
-//     if (fill_stroke[0] == "1") ctx.fill(path);
-//     if (fill_stroke[1] == "1") ctx.stroke(path);
-//   }
-
-//   // Final restore to clean up the initial translate/scale
-//   ctx.restore();
-// }
+    function loop(){
+        canvas.width ^= 0;
+        try{
+            drawAsset(editor.value);
+        } catch(e) {
+            // Silently fail if typing an incomplete command
+        }
+        window.requestAnimationFrame(loop);
+    }
 
 
-// Coffee SVG: "c #fff 1 p m 1 5 l 4 30 l 14 0 l 4 -30:1 c #6f4e37 1 p m 1 11 l 2 16 l 18 0 l 2 -16:1 c #000 1 r 5 17 5 1 1 r 11 17 3 1 1 r 10 19 7 1 1 r 2 0 20 2 1 c #0f0f0f 1 r 0 2 24 3 1"
 
-/*
- * SVG-like drawing function
- * @param {string} a - The instruction data string (e.g., "c red 1, r 0 0 10 10 1")
- * @param {Array} b - Transformation array [xPos, yPos, xScale, yScale]
- * @param {Array} e - Optional color pallet (e.g., ["#ff0000", "#00ff00"])
- */
-function svg(b,d,e=[]){ctx.save(),ctx.translate(d[0],d[1]),ctx.scale(d[2],d[3]);for(var c=b.split(" ");0<c.length;){var f=c[0],g=new Path2D,h="00";if("p"==f){let a=c.join(" ");g=new Path2D(a.slice(2,a.indexOf(":"))),h=(c=a.slice(a.indexOf(":")+1).trim().split(" "))[0]}else"w"==f?ctx.lineWidth=c[1]:"g"==f?ctx.globalAlpha=c[1]:"s"==f?ctx.shadowBlur=c[1]*Math.abs(d[2]):"c"==f?("$"==c[1][0]&&(c[1]=e[c[1].slice(1)]),"1"==c[2][0]&&(ctx.fillStyle=c[1]),"1"==c[2][1]&&(ctx.strokeStyle=c[1]),"1"==c[2][2]&&(ctx.shadowColor=c[1]),c.shift()):"a"==f?(g.arc(c[1],c[2],c[3],.01745*c[4],.01745*c[5]),h=c[6]):"r"==f?(g.rect(c[1],c[2],c[3],c[4]),h=c[5]):"<"==f?ctx.save():">"==f?ctx.restore():"t"==f?ctx.translate(c[1],c[2]):"q"==f&&ctx.rotate(.01745*c[1]);c.shift(),"1"==h[0]&&ctx.fill(g),"1"==h[1]&&ctx.stroke(g)}ctx.restore()}
 
-spawnButtons()
-window.onresize()
-switchAsset(0)
+    // Mini-SVG v2 Function
+    function svg(c,d,e=[],b=ctx){b.save(),b.translate(d[0],d[1]),b.scale(d[2],d[3]);for(var f=c.split(" ");0<f.length;){var g=f[0],h=new Path2D,j="";if("p"==g){let a=f.join(" ");h=new Path2D(a.slice(2,a.indexOf(":"))),j=(f=a.slice(a.indexOf(":")+1).trim().split(" "))[0]}else"w"==g?b.lineWidth=f[1]:"g"==g?b.globalAlpha=f[1]:"s"==g?b.shadowBlur=f[1]*Math.abs(d[2]):"c"==g?("$"==f[1][0]&&(f[1]=e[f[1].slice(1)]),1==f[2][0]&&(b.fillStyle=f[1]),1==f[2][1]&&(b.strokeStyle=f[1]),1==f[2][2]&&(b.shadowColor=f[1]),f.shift()):"a"==g?(h.arc(f[1],f[2],f[3],.01745*f[4],.01745*f[5]),j=f[6]):"r"==g?(h.rect(f[1],f[2],f[3],f[4]),j=f[5]):"<"==g?b.save():">"==g?b.restore():"t"==g?b.translate(f[1],f[2]):"q"==g&&b.rotate(.01745*f[1]);f.shift(),1==j[0]&&b.fill(h),1==j[1]&&b.stroke(h)}b.restore()}
+
+    // Initialization
+    if(localStorage.getItem("mini_svg_current_edit")){
+        let loadAsset = JSON.parse(localStorage.getItem("mini_svg_current_edit"));
+        titleInput.value = loadAsset.title
+        h.value = loadAsset.h
+        w.value = loadAsset.w
+        editor.value = loadAsset.svg
+        customColors = loadAsset.palette
+        
+        if (loadAsset.usePalette || customColors.length > 0) {
+            document.getElementById('paletteToggle').checked = true;
+            togglePalette(true);
+        }
+
+        renderColors();
+
+    } else {
+        title.value = "Example Asset"
+        h.value = 35
+        w.value = 24
+        editor.value = "c #fff 1 p m 1 5 l 4 30 l 14 0 l 4 -30:1 c #6f4e37 1 p m 1 11 l 2 16 l 18 0 l 2 -16:1 c #000 1 r 5 17 5 1 1 r 11 17 3 1 1 r 10 19 7 1 1 r 2 0 20 3 1 c #0f0f0f 1 r 0 2 24 3 1"
+        customColors = [];
+        renderColors();
+    }
+
 loop()
 
 </script>

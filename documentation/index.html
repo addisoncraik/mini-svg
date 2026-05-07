@@ -2,18 +2,19 @@
     <p>
         <h1>SVG-Like Program For JS13k</h1>
         <hr><br>
-        Mini-SVG is a simple function developed to draw little SVG-like drawings through the html canvas 2d context (ctx). It takes in <b>3</b> parameters like so: <code>svg("svg-data",[xPos,yPos,xScale,yScale],[palette])</code><br>
+        Mini-SVG is a simple function developed to draw little SVG-like drawings through the html canvas 2d context (ctx). It takes in <b>3</b> parameters like so: <code>svg("svg-data",[xPos,yPos,xScale,yScale],[palette],context)</code><br>
         <ul>
             <li><code>svg-data</code> is a string that contains all the instructions for the drawing program. <b>Every command and argument must be separated by a space.</b></li>
             <li><code>xPos</code> &amp; <code>yPos</code> is where your drawing is being drawn</li>
             <li><code>xScale</code> &amp; <code>yScale</code> is the scale of your drawing</li>
             <li><code>palette</code> <b>(optional)</b> is an array of colors used to dynamically change the look of an svg without storing the exact same svg in different colors.</li>
+            <li><code>context</code> <b>(optional)</b> is the canvas 2d context you want to draw on, if left blank it defaults to a variable named <code>ctx</code>.</li>
         </ul>
         <br>To use the program you must put the following function somewhere in your code:<br><br>
 
-        <code id='main-code' style="word-break: break-all;">function svg(b,d,e=[]){ctx.save(),ctx.translate(d[0],d[1]),ctx.scale(d[2],d[3]);for(var c=b.split(" ");0&lt;c.length;){var f=c[0],g=new Path2D,h="00";if("p"==f){let a=c.join(" ");g=new Path2D(a.slice(2,a.indexOf(":"))),h=(c=a.slice(a.indexOf(":")+1).trim().split(" "))[0]}else"w"==f?ctx.lineWidth=c[1]:"g"==f?ctx.globalAlpha=c[1]:"s"==f?ctx.shadowBlur=c[1]*Math.abs(d[2]):"c"==f?("$"==c[1][0]&&(c[1]=e[c[1].slice(1)]),"1"==c[2][0]&&(ctx.fillStyle=c[1]),"1"==c[2][1]&&(ctx.strokeStyle=c[1]),"1"==c[2][2]&&(ctx.shadowColor=c[1]),c.shift()):"a"==f?(g.arc(c[1],c[2],c[3],.01745*c[4],.01745*c[5]),h=c[6]):"r"==f?(g.rect(c[1],c[2],c[3],c[4]),h=c[5]):"&lt;"==f?ctx.save():"&gt;"==f?ctx.restore():"t"==f?ctx.translate(c[1],c[2]):"q"==f&&ctx.rotate(.01745*c[1]);c.shift(),"1"==h[0]&&ctx.fill(g),"1"==h[1]&&ctx.stroke(g)}ctx.restore()}</code>
+        <code id='main-code' style="word-break: break-all;">function svg(c,d,e=[],b=ctx){b.save(),b.translate(d[0],d[1]),b.scale(d[2],d[3]);for(var f=c.split(" ");0&lt;f.length;){var g=f[0],h=new Path2D,j="";if("p"==g){let a=f.join(" ");h=new Path2D(a.slice(2,a.indexOf(":"))),j=(f=a.slice(a.indexOf(":")+1).trim().split(" "))[0]}else"w"==g?b.lineWidth=f[1]:"g"==g?b.globalAlpha=f[1]:"s"==g?b.shadowBlur=f[1]*Math.abs(d[2]):"c"==g?("$"==f[1][0]&&(f[1]=e[f[1].slice(1)]),1==f[2][0]&&(b.fillStyle=f[1]),1==f[2][1]&&(b.strokeStyle=f[1]),1==f[2][2]&&(b.shadowColor=f[1]),f.shift()):"a"==g?(h.arc(f[1],f[2],f[3],.01745*f[4],.01745*f[5]),j=f[6]):"r"==g?(h.rect(f[1],f[2],f[3],f[4]),j=f[5]):"&lt;"==g?b.save():"&gt;"==g?b.restore():"t"==g?b.translate(f[1],f[2]):"q"==g&&b.rotate(.01745*f[1]);f.shift(),1==j[0]&&b.fill(h),1==j[1]&&b.stroke(h)}b.restore()}</code>
         <br><br>
-        <p style="text-align: center;">492 bytes gzipped (816 bytes uncompressed)</p><br><br>
+        <p style="text-align: center;">491 bytes gzipped (778 bytes uncompressed)</p><br><br>
 
         Many instructions rely on a 2-bit string to determine if a shape should be filled, stroked, or both. <br>
         <table>
@@ -129,7 +130,7 @@
             <li><code>&gt;</code> is equivalent to <code>ctx.restore()</code> (This restores the last saved canvas state).</li>
         </ol><br><br>
         
-        Example of full <code>svg()</code> function:<br><br>
+        Example: Typical use of the <code>svg()</code> function:<br><br>
 
         <!-- Toggle Slider UI -->
         <div class="toggle-container">
@@ -170,7 +171,7 @@
         document.getElementById("color3")
     ];
 
-    function svg(b,d,e=[]){ctx.save(),ctx.translate(d[0],d[1]),ctx.scale(d[2],d[3]);for(var c=b.split(" ");0<c.length;){var f=c[0],g=new Path2D,h="00";if("p"==f){let a=c.join(" ");g=new Path2D(a.slice(2,a.indexOf(":"))),h=(c=a.slice(a.indexOf(":")+1).trim().split(" "))[0]}else"w"==f?ctx.lineWidth=c[1]:"g"==f?ctx.globalAlpha=c[1]:"s"==f?ctx.shadowBlur=c[1]*Math.abs(d[2]):"c"==f?("$"==c[1][0]&&(c[1]=e[c[1].slice(1)]),"1"==c[2][0]&&(ctx.fillStyle=c[1]),"1"==c[2][1]&&(ctx.strokeStyle=c[1]),"1"==c[2][2]&&(ctx.shadowColor=c[1]),c.shift()):"a"==f?(g.arc(c[1],c[2],c[3],.01745*c[4],.01745*c[5]),h=c[6]):"r"==f?(g.rect(c[1],c[2],c[3],c[4]),h=c[5]):"<"==f?ctx.save():">"==f?ctx.restore():"t"==f?ctx.translate(c[1],c[2]):"q"==f&&ctx.rotate(.01745*c[1]);c.shift(),"1"==h[0]&&ctx.fill(g),"1"==h[1]&&ctx.stroke(g)}ctx.restore()}
+    function svg(c,d,e=[],b=ctx){b.save(),b.translate(d[0],d[1]),b.scale(d[2],d[3]);for(var f=c.split(" ");0<f.length;){var g=f[0],h=new Path2D,j="";if("p"==g){let a=f.join(" ");h=new Path2D(a.slice(2,a.indexOf(":"))),j=(f=a.slice(a.indexOf(":")+1).trim().split(" "))[0]}else"w"==g?b.lineWidth=f[1]:"g"==g?b.globalAlpha=f[1]:"s"==g?b.shadowBlur=f[1]*Math.abs(d[2]):"c"==g?("$"==f[1][0]&&(f[1]=e[f[1].slice(1)]),1==f[2][0]&&(b.fillStyle=f[1]),1==f[2][1]&&(b.strokeStyle=f[1]),1==f[2][2]&&(b.shadowColor=f[1]),f.shift()):"a"==g?(h.arc(f[1],f[2],f[3],.01745*f[4],.01745*f[5]),j=f[6]):"r"==g?(h.rect(f[1],f[2],f[3],f[4]),j=f[5]):"<"==g?b.save():">"==g?b.restore():"t"==g?b.translate(f[1],f[2]):"q"==g&&b.rotate(.01745*f[1]);f.shift(),1==j[0]&&b.fill(h),1==j[1]&&b.stroke(h)}b.restore()}
 
     window.onresize = () => {
         canvas.width = canvas.height = contentDiv.clientWidth * 0.7;
