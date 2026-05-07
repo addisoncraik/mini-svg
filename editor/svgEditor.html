@@ -481,6 +481,93 @@
 
 
 
+    /**
+     * Main SVG-like drawing function
+     * @param {string} t - The instruction data string (e.g., "c red 1, r 0 0 10 10 1 0,")
+     * @param {Array} e - Transformation array [xPos, yPos, xScale, yScale]
+     * @param {Array} colors - (Optional) color pallet (e.g., ["#ff0000", "#00ff00"])
+     * @param {CanvasRenderingContext2D} context - (Optional) canvas context to draw on (defaults to global ctx)
+     */
+    // function svg(t, e, colors = [], context = ctx) {
+    //   // Save current context and apply initial transformations
+    //   context.save();
+    //   context.translate(e[0], e[1]);
+    //   context.scale(e[2], e[3]);
+
+    //   var a = t.split(" "); // Split the instruction string into parts
+
+    //   // Iterate through the instruction string character by character
+    //   while (a.length > 0) {
+    //     var c = a[0]; // Current command character
+    //     var path = new Path2D(); // Initialize a new path for potential path commands
+    //     var fill_stroke = "00";
+    //     //var a = t.slice(i + 2, t.length-1).split(" "); // Parse the arguments for this command
+
+    //     if (c == "p") {
+            
+    //         let i = a.join(" ")
+    //         path = new Path2D(i.slice(2, i.indexOf(":")));
+    //         a = i.slice(i.indexOf(":") + 1).trim().split(" ");
+    //         fill_stroke = a[0];
+
+    //     } else if (c == "w") {
+    //       // Line Width
+    //       context.lineWidth = a[1];
+
+    //     } else if (c == "g") {
+    //       // Global Alpha (Transparency)
+    //       context.globalAlpha = a[1];
+
+    //     } else if (c == "s") {
+    //       // Shadow Blur (scaled based on the X scale of the drawing)
+    //       context.shadowBlur = a[1] * Math.abs(e[2]);
+
+    //     } else if (c == "c") {
+    //       // Color Command: [color, fillBool, strokeBool, shadowBool]
+    //       if (a[1][0] == "$") a[1] = colors[a[1].slice(1)]; // If the color starts with $, treat it as a variable
+    //       if (a[2][0] == 1) context.fillStyle = a[1];
+    //       if (a[2][1] == 1) context.strokeStyle = a[1];
+    //       if (a[2][2] == 1) context.shadowColor = a[1];
+    //       // Skip the index forward past the color string length
+    //       a.shift();
+
+    //     } else if (c == "a") {
+    //       // Arc Command: [x, y, radius, startAngle, endAngle, fill, stroke]
+    //       path.arc(a[1], a[2], a[3], a[4] * 0.01745, a[5] * 0.01745);
+    //       fill_stroke = a[6];
+
+    //     } else if (c == "r") {
+    //       // Rect Command: [x, y, width, height, fill, stroke]
+    //       path.rect(a[1], a[2], a[3], a[4]);
+    //       fill_stroke = a[5];
+
+    //     } else if (c == "<") {
+    //       // Save state
+    //       context.save();
+
+    //     } else if (c == ">") {
+    //       // Restore state
+    //       context.restore();
+
+    //     } else if (c == "t") {
+    //       // Translate
+    //       context.translate(a[1], a[2]);
+
+    //     } else if (c == "q") {
+    //       // Rotate (converts degrees to radians)
+    //       context.rotate(a[1] * 0.01745);
+    //     }
+
+    //     a.shift();
+    //     if (fill_stroke[0] == 1) context.fill(path);
+    //     if (fill_stroke[1] == 1) context.stroke(path);
+    //   }
+
+    //   // Final restore to clean up the initial translate/scale
+    //   ctx.restore();
+    // }
+
+
 
     // Mini-SVG v2 Function
     function svg(c,d,e=[],b=ctx){b.save(),b.translate(d[0],d[1]),b.scale(d[2],d[3]);for(var f=c.split(" ");0<f.length;){var g=f[0],h=new Path2D,j="";if("p"==g){let a=f.join(" ");h=new Path2D(a.slice(2,a.indexOf(":"))),j=(f=a.slice(a.indexOf(":")+1).trim().split(" "))[0]}else"w"==g?b.lineWidth=f[1]:"g"==g?b.globalAlpha=f[1]:"s"==g?b.shadowBlur=f[1]*Math.abs(d[2]):"c"==g?("$"==f[1][0]&&(f[1]=e[f[1].slice(1)]),1==f[2][0]&&(b.fillStyle=f[1]),1==f[2][1]&&(b.strokeStyle=f[1]),1==f[2][2]&&(b.shadowColor=f[1]),f.shift()):"a"==g?(h.arc(f[1],f[2],f[3],.01745*f[4],.01745*f[5]),j=f[6]):"r"==g?(h.rect(f[1],f[2],f[3],f[4]),j=f[5]):"<"==g?b.save():">"==g?b.restore():"t"==g?b.translate(f[1],f[2]):"q"==g&&b.rotate(.01745*f[1]);f.shift(),1==j[0]&&b.fill(h),1==j[1]&&b.stroke(h)}b.restore()}
